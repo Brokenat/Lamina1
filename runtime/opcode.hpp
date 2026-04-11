@@ -19,9 +19,9 @@ enum Opcode : uint8_t {
     ICConst,    // constant_tag_idx(2)
     Pop,        // 0
     Halt,
-    IAdd, ISub, IMul, IDiv, IMod, IPow,     // 0
+    IAdd, ISub, IMul, IDiv, IMod, IPow, INeg,    // 0
 
-    FuncCReate,     // constant_tag_idx(2) local_var_count(1)
+    FuncCReate,     // constant_tag_idx(2)
 
     SubCall, //
     CCall,
@@ -31,7 +31,9 @@ enum Opcode : uint8_t {
     CmpEq, CmpNe, CmpLt, CmpLe, CmpGt, CmpGe,  // 0
     IfTrue, IfFalse, // then ip+(1)  else ip+(1)
 
-    LGet, LSet,
+    LGet, LSet, // idx(1)
+    GGet, GSet, // idx(2)
+    FAddi, FSUbi, FMuli, FDivi, FModi, FPow, FNeg,
 };
 
 }

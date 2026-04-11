@@ -5,11 +5,11 @@
 
 using namespace lmx::runtime;
 
-Object::Object(const ObjectKind kind) noexcept: kind(kind) {}
+Object::Object(const uint32_t kind) noexcept: kind(kind) {}
 
 
 Object::~Object() noexcept = default;
 
-ObjectKind Object::get_kind() const noexcept {
+uint32_t Object::get_kind() const noexcept {
     return this->kind;
 }

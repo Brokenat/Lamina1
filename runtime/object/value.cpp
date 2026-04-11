@@ -19,6 +19,8 @@ Value::Value(const int64_t int_val) noexcept : kind(ValueKind::Int), int_val(int
 
 Value::Value(Object *obj) noexcept : kind(ValueKind::Obj), obj(obj) {}
 
+Value::Value(const int num, const int den) : kind(ValueKind::Fraction), frac_val(num, den) {}
+
 Object *Value::operator->() const noexcept {
     assert(this->kind == ValueKind::Obj);
     return obj;
@@ -57,8 +59,9 @@ std::string Value::to_string() const noexcept {
     case ValueKind::Bool: return bool_val ? "true" : "false";
     case ValueKind::Int: return std::to_string(int_val);
     case ValueKind::Obj: return obj->to_string();
-    case ValueKind::C_Ptr: return "<>";
+    case ValueKind::C_Ptr: return "cptr";
     case ValueKind::Null: return "null";
+    case ValueKind::Fraction: return "frac";
     }
 
     // 不可能到达这里
@@ -66,46 +69,61 @@ std::string Value::to_string() const noexcept {
 }
 
 Value Value::operator%(const Value &other) const noexcept {
+    assert(this->kind == ValueKind::Int);
     return Value(this->int_val % other.int_val);
 }
 
 Value &Value::operator%=(const Value &other) noexcept {
+    assert(this->kind == ValueKind::Int);
     this->int_val %= other.int_val;
     return *this;
 }
 
 Value Value::operator*(const Value &other) const noexcept {
+    assert(this->kind == ValueKind::Int);
     return Value(this->int_val * other.int_val);
 }
 
 Value &Value::operator*=(const Value &other) noexcept {
+    assert(this->kind == ValueKind::Int);
     this->int_val *= other.int_val;
     return *this;
 }
 
 Value Value::operator/(const Value &other) const noexcept {
+    assert(this->kind == ValueKind::Int);
     return Value(this->int_val / other.int_val);
 }
 
 Value &Value::operator/=(const Value &other) noexcept {
+    assert(this->kind == ValueKind::Int);
     this->int_val /= other.int_val;
     return *this;
 }
 
 Value Value::operator+(const Value &other) const noexcept {
+    assert(this->kind == ValueKind::Int);
     return Value(int_val + other.int_val);
 }
 
+Value Value::operator-() const noexcept {
+    assert(this->kind == ValueKind::Int);
+    return Value(-int_val);
+}
+
 Value &Value::operator+=(const Value &other) noexcept {
+    assert(this->kind == ValueKind::Int);
     this->int_val += other.int_val;
     return *this;
 }
 
 Value Value::operator-(const Value &other) const noexcept {
+    assert(this->kind == ValueKind::Int);
     return Value(int_val - other.int_val);
 }
 
 Value &Value::operator-=(const Value &other) noexcept {
+    assert(this->kind == ValueKind::Int);
     this->int_val -= other.int_val;
     return *this;
 }
@@ -135,9 +153,11 @@ bool Value::operator!=(const Value &other) const noexcept {
 }
 
 bool Value::operator!() const noexcept {
+    assert(this->kind == ValueKind::Bool);
     return !bool_val;
 }
 
 Value::operator bool() const noexcept {
+    assert(this->kind == ValueKind::Bool);
     return bool_val;
 }

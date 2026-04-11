@@ -4,22 +4,20 @@
 
 #include "code.hpp"
 
-#include <exception>
-
 using namespace lmx::runtime;
 
 Object *Code::clone() const noexcept {
     return nullptr;
 }
 
-Code::Code(uint16_t constant_id, uint8_t *code) noexcept : Object(ObjectKind::Code), constant_id(constant_id), code(code) { }
+Code::Code(const uint16_t constant_id, uint8_t *code) noexcept : Object(ObjectKind::Code), constant_id(constant_id), code(code) { }
 
 std::string Code::to_string() const noexcept {
     return type_info();
 }
 
 std::string Code::type_info() const noexcept {
-    return "Code";
+    return "code";
 }
 
 bool Code::equals(const Object *other) const noexcept {

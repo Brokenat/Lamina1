@@ -9,7 +9,7 @@
 
 namespace lmx::runtime {
 
-class Code : Object {
+class Code : public Object {
 public:
     uint16_t constant_id;
     uint8_t* code;

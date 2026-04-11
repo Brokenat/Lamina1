@@ -8,7 +8,7 @@
 
 #undef DEBUGGING
 
-#ifdef DEBUGGING
+#ifndef NDEBUG
 
 constexpr const char* get_filename(const char* path) {
     const char* last_slash = path;

@@ -15,9 +15,9 @@ class LMC_API Parser {
     std::shared_ptr<ExprNode> parse_addition()      noexcept;   // + -
     std::shared_ptr<ExprNode> parse_multi()         noexcept;   // * / %
     std::shared_ptr<ExprNode> parse_exponent()      noexcept;   // ^
-    std::shared_ptr<ExprNode> parse_term()          noexcept;   // - & *
+    std::shared_ptr<ExprNode> parse_term()          noexcept;   // -
     std::shared_ptr<ExprNode> parse_factor()        noexcept;   // foo() arr[] id.id
-    std::shared_ptr<ExprNode> parse_primary()       noexcept;   // num, (expr), ident ...
+    std::shared_ptr<ExprNode> parse_primary()       noexcept;   // num, (expr), ident, table, mat, set...
     std::shared_ptr<ExprNode> parse_block()         noexcept;
     std::shared_ptr<ExprNode> parse_if()            noexcept;
     std::shared_ptr<Type> parse_type() noexcept;

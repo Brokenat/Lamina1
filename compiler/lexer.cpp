@@ -44,6 +44,10 @@ Token Lexer::next() {
         }
         case '-': {
             advance();
+            if (content[pos] == '>') {
+                advance();
+                return {TokenType::ARROW, "->", line, col - 2};
+            }
             return {TokenType::OPER_MINUS, "-", line, col - 1};
         }
         case '*': {
@@ -63,6 +67,10 @@ Token Lexer::next() {
             if (content[pos] == '=') {
                 advance();
                 return {TokenType::EQ, "==", line, col - 1};
+            }
+            if (content[pos] == '>') {
+                advance();
+                return {TokenType::DOUBLE_ARROW, "=>", line, col - 2};
             }
             return {TokenType::ASSIGN, "=", line, col - 1};
         }
@@ -209,6 +217,8 @@ Token Lexer::next() {
                     {"else", TokenType::KW_ELSE},
                     {"let", TokenType::KW_LET},
                     {"var", TokenType::KW_VAR},
+                    {"const", TokenType::KW_CONST},
+                    {"unit", TokenType::KW_UNIT},
                     {"module", TokenType::KW_MODULE},
                     {"use", TokenType::KW_USE},
                     {"and", TokenType::KW_AND},
@@ -217,6 +227,12 @@ Token Lexer::next() {
                     {"break", TokenType::KW_BREAK},
                     {"continue", TokenType::KW_CONTINUE},
                     {"as", TokenType::KW_AS},
+                    {"while", TokenType::KW_WHILE},
+                    {"for", TokenType::KW_FOR},
+                    {"in", TokenType::KW_IN},
+                    {"not", TokenType::NOT},    // 让! 和 not等价
+                    {"import", TokenType::KW_IMPORT},
+                    {"sym", TokenType::KW_SYM},
                 };
                 if (const auto it = keywords.find(id); it != keywords.end()) {
                     return {it->second, id, cur_line, cur_col};

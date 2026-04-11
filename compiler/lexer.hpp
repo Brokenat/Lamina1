@@ -21,7 +21,7 @@ enum class TokenType {
 
     LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE,
 
-    EQ, NE, LT, GT, LE, GE, PIPE,
+    EQ, NE, LT, GT, LE, GE, PIPE, ARROW, DOUBLE_ARROW,
 
     NUM_LITERAL, STRING_LITERAL, TRUE_LITERAL, FALSE_LITERAL, IDENTIFIER,
 
@@ -35,6 +35,13 @@ enum class TokenType {
     KW_CONTINUE,
     COMMENT,
     KW_AS, KW_VAR, KW_AND, KW_OR,
+    KW_WHILE,
+    KW_FOR,
+    KW_IN,
+    KW_CONST,
+    KW_UNIT,
+    KW_IMPORT,
+    KW_SYM,
 };
 
 inline std::string to_string(const TokenType& type) {

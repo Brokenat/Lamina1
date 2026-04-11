@@ -331,15 +331,13 @@ std::shared_ptr<StmtNode> Parser::parse_func() noexcept {
         do {
             auto pline = cur().line, pcol = cur().col;
             auto pid = parse_param_name();
-            consume(TokenType::COLON, ":");
-            const auto ptype = parse_type();
-            params[pid] = ptype;
+            params[pid] = parse_type();
             if (match(TokenType::RPAREN)) { break; }
             if (!consume(TokenType::COMMA, ",")) break;
         } while (true);
     }
     consume(TokenType::RPAREN, ")");
-    consume(TokenType::COLON, ":");
+    consume(TokenType::ARROW, "->");
     auto return_type = parse_type();
 
     auto body = std::static_pointer_cast<BlockExprNode>(parse_block());
@@ -352,15 +350,6 @@ std::shared_ptr<Type> Parser::parse_type() noexcept {
     case TokenType::IDENTIFIER: {
         auto id = cur().text;
         advance();
-        if (match(TokenType::LBRACK)) {
-            size_t len = -1;
-            advance();
-            if (match(TokenType::NUM_LITERAL)) {
-                len = std::stoll(cur().text);
-                advance();
-            } else consume(TokenType::RBRACK, "]");
-            return std::make_shared<ArrayType>(std::make_shared<NamedType>(id), len);
-        }
 
         return std::make_shared<NamedType>(id);
     }

@@ -4,6 +4,7 @@
 
 #pragma once
 #include <cstdint>
+#include <vector>
 #include <memory>
 #include <span>
 
@@ -11,27 +12,37 @@
 #include "object/code.hpp"
 #include "object/value.hpp"
 
+
+
 namespace lmx::runtime {
 
 struct Frame {
     Frame* last;
     uint8_t* ret_addr;
-    std::unique_ptr<Value[]> local_vars;
-    explicit Frame(Frame* last, uint8_t* ret_addr, size_t var_count) noexcept;
+    Value* local_vars;
+    explicit Frame(Frame* last, uint8_t* ret_addr, Value* local_vars) noexcept;
+    ~Frame() noexcept;
 };
 
 class LaminaVM {
-    ConstantPoolInfo* cp{nullptr};
-    Value* stack        {nullptr};
+    ConstantPoolInfo* cp;
+    Value* stack;
     Code* prog          {nullptr};
     uint8_t* ip         {nullptr};
-    std::unique_ptr<Frame> frame{nullptr};
+    Value* local_vars_bp;
+    Value* local_vars_curp;
+    Value* global_vars;
+    std::vector<Frame*> free_frames;
+    Frame* cur_frame;
+
     std::span<char*> args;
+
+    void new_frame(uint8_t* ret_addr) noexcept;
+    uint8_t* pop_frame() noexcept;
 public:
-    explicit LaminaVM() noexcept;
-    explicit LaminaVM(ConstantPoolInfo* cp, Value* stack) noexcept;
-    explicit LaminaVM(int argc, char** argv) noexcept;
-    void init() noexcept;
+    explicit LaminaVM() noexcept = delete;
+    explicit LaminaVM(ConstantPoolInfo* cp, int argc, char** argv) noexcept;
+    ~LaminaVM() noexcept;
     int run(Code* prog) noexcept;
 };
 

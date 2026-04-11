@@ -3,11 +3,12 @@
 //
 
 #pragma once
+#include "fraction.hpp"
 #include "object.hpp"
 
 namespace lmx::runtime {
 enum class ValueKind {
-    Null, C_Ptr, Obj, Int, Bool,
+    Null, C_Ptr, Obj, Int, Bool, Fraction
 };
 struct Value {
     ValueKind kind{ValueKind::Null};
@@ -17,6 +18,7 @@ struct Value {
         Object* obj;
         int64_t int_val;
         bool bool_val;
+        Fraction frac_val;
     };
 
     explicit Value()            noexcept;
@@ -24,6 +26,7 @@ struct Value {
     explicit Value(Object* obj) noexcept;
     explicit Value(int64_t val) noexcept;
     explicit Value(bool val)    noexcept;
+    explicit Value(int num, int den);
 
     Object* operator->() const noexcept;
 
@@ -37,6 +40,7 @@ struct Value {
     Value operator*(const Value& other) const noexcept;
     Value operator/(const Value& other) const noexcept;
     Value operator%(const Value& other) const noexcept;
+    Value operator-() const noexcept;
 
     Value& operator+=(const Value& other) noexcept;
     Value& operator-=(const Value& other) noexcept;
@@ -56,6 +60,8 @@ struct Value {
     explicit operator bool() const noexcept;
 
     [[nodiscard]] std::string to_string() const noexcept;
+
+
 };
 
 }

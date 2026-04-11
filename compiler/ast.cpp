@@ -101,7 +101,7 @@ BreakStmtNode::BreakStmtNode(const size_t line, const size_t col) noexcept
     : StmtNode(ASTKind::BreakStmt, line, col) {}
 
 ParamsDeclNode::ParamsDeclNode(const size_t line, const size_t col,
-                               std::map<std::shared_ptr<ExprStmtNode>, std::shared_ptr<Type> > stmts) noexcept
+                               std::map<std::shared_ptr<ExprStmtNode>, std::shared_ptr<Type>> stmts) noexcept
     : StmtNode(ASTKind::ParamsDeclNode, line, col), stmts(std::move(stmts)) {
 }
 

@@ -20,10 +20,16 @@ inline std::unordered_map<ErrorType, std::string> error_type_map = {
     {ErrorType::Analysis, "Analysis"},
     {ErrorType::Generate, "Generate"}
 };
-inline constexpr bool P_DEBUG = true;
-#define throw_error(error_type, message, line, col) \
+inline constexpr bool LMX_DEBUG =
+#ifdef NDEBUG
+false;
+#else
+true;
+#endif
+#define throw_error(error_type, message, line, col) do {\
     errd = true;\
-if constexpr (P_DEBUG) {\
+if constexpr (LMX_DEBUG) {\
     std::cerr << "[" << __FILE__ << ":" << __LINE__ << "]";\
 }\
-    std::cerr << error_type_map[error_type] << "Error at " <<  line << ", " << col << ":\n\t" << message << std::endl;
+    std::cerr << error_type_map[error_type] << "Error at " <<  line << ", " << col << ":\n\t" << message << std::endl;\
+    } while(0);

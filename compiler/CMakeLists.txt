@@ -3,4 +3,6 @@ add_library(laminac
     error.cpp
     lexer.cpp
     parser.cpp
+        hir.cpp
+        hir.hpp
 )

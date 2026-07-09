@@ -3,9 +3,9 @@
 //
 
 #include "ast.hpp"
-
 #include <ranges>
 #include <utility>
+
 using namespace lmx;
 
 Type::~Type() = default;

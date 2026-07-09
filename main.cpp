@@ -6,7 +6,7 @@
 #include "compiler/lexer.hpp"
 #include "runtime/vm.hpp"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv) {
     std::string code = R"(
 func foo() -> int {
     4

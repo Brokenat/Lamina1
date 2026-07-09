@@ -34,6 +34,8 @@ struct Value {
     Value& operator=(Object* obj)       noexcept;
     Value& operator=(int64_t int_val)   noexcept;
     Value& operator=(bool bool_val)     noexcept;
+    Value& operator=(const Value& other)noexcept = default;
+    Value& operator=(Value&& other)     noexcept = default;
 
     Value operator+(const Value& other) const noexcept;
     Value operator-(const Value& other) const noexcept;

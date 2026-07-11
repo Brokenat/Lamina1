@@ -329,9 +329,9 @@ std::shared_ptr<StmtNode> Parser::parse_func() noexcept {
     auto psline = cur().line, pscol = cur().col;
     if (!match(TokenType::RPAREN)) {
         do {
-            auto pline = cur().line, pcol = cur().col;
-            auto pid = parse_param_name();
-            params[pid] = parse_type();
+            auto pid = cur().text;
+            advance();
+            params.emplace_back(pid, parse_type());
             if (match(TokenType::RPAREN)) { break; }
             if (!consume(TokenType::COMMA, ",")) break;
         } while (true);

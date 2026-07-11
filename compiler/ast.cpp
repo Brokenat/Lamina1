@@ -31,6 +31,39 @@ bool ArrayType::equals(Type *other) const noexcept {
     return true;
 }
 
+bool UnknownType::equals(Type *other) const noexcept {
+    return false;
+}
+
+bool StringType::equals(Type *other) const noexcept {
+    if (!other) return false;
+    if (other->kind != this->kind) return false;
+    return true;
+}
+
+FunctionType::FunctionType(std::vector<std::shared_ptr<Type> > params_ty, std::shared_ptr<Type> ret_ty) noexcept
+    : Type(TypeKind::Function), params_ty(std::move(params_ty)), ret_ty(std::move(ret_ty)) {
+}
+
+bool FunctionType::equals(Type *other) const noexcept {
+    if (!other) return false;
+    if (other->kind != this->kind) return false;
+    const auto *o = static_cast<FunctionType *>(other);
+    const auto params_len = params_ty.size();
+    if (params_len != o->params_ty.size()) return false;
+    for (size_t i = 0; i < params_len; i++) {
+        if (!params_ty[i]->equals(o->params_ty[i].get())) return false;
+    }
+    if (!ret_ty->equals(o->ret_ty.get())) return false;
+    return true;
+}
+
+bool NoneType::equals(Type *other) const noexcept {
+    if (!other) return true;
+    if (other->kind != this->kind) return false;
+    return true;
+}
+
 ASTNode::ASTNode(const ASTKind kind, const size_t line, const size_t col) noexcept
     : kind(kind), line(line), col(col) {
 }
@@ -41,6 +74,17 @@ ExprNode::ExprNode(const ASTKind kind, const size_t line, const size_t col) noex
 
 StmtNode::StmtNode(const ASTKind kind, const size_t line, const size_t col) noexcept
     : ASTNode(kind, line, col) {
+}
+
+Module::Module(std::string name, std::vector<std::shared_ptr<ASTNode>> decls) noexcept
+        : name(std::move(name)), decls(std::move(decls)) {
+    for (const auto& decl : decls) {
+        if (decl->kind == ASTKind::FuncImpl) {
+            auto node = *std::reinterpret_pointer_cast<FuncImplNode>(decl).get();
+            node.block = nullptr;
+            top_func_def.push_back(std::move(node));
+        }
+    }
 }
 
 ExprStmtNode::ExprStmtNode(const size_t line, const size_t col, std::shared_ptr<ExprNode> expr) noexcept
@@ -101,7 +145,7 @@ BreakStmtNode::BreakStmtNode(const size_t line, const size_t col) noexcept
     : StmtNode(ASTKind::BreakStmt, line, col) {}
 
 ParamsDeclNode::ParamsDeclNode(const size_t line, const size_t col,
-                               std::map<std::shared_ptr<ExprStmtNode>, std::shared_ptr<Type>> stmts) noexcept
+                               decltype(stmts) stmts) noexcept
     : StmtNode(ASTKind::ParamsDeclNode, line, col), stmts(std::move(stmts)) {
 }
 

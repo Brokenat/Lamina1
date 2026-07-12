@@ -15,6 +15,7 @@ namespace lmx::runtime {
 
 #define LMX_LOCAL_VAR_COUNT 256
 #define LMX_CALLSTACK_MAX_COUNT 100
+#define LMX_VM_REG_COUNT 256
 
 struct Frame {
     Frame* last;
@@ -25,7 +26,7 @@ struct Frame {
 };
 
 class LaminaVM {
-    Value regs[256];
+    Value regs[LMX_VM_REG_COUNT];
     ConstantPoolInfo* cp;
     Value* stack;
     Code* prog          {nullptr};

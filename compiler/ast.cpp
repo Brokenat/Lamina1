@@ -76,7 +76,7 @@ StmtNode::StmtNode(const ASTKind kind, const size_t line, const size_t col) noex
     : ASTNode(kind, line, col) {
 }
 
-Module::Module(std::string name, std::vector<std::shared_ptr<ASTNode>> decls) noexcept
+Module::Module(std::string name, decltype(decls) decls) noexcept
         : name(std::move(name)), decls(std::move(decls)) {
     for (const auto& decl : decls) {
         if (decl->kind == ASTKind::FuncImpl) {

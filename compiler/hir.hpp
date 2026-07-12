@@ -1,4 +1,6 @@
 #pragma once
+#include <optional>
+
 #include "ast.hpp"
 
 namespace lmx::hir {
@@ -11,20 +13,30 @@ namespace lmx::hir {
 
 using HirNode = ASTNode;
 struct Scope {
-    using Var = std::pair<std::string, std::shared_ptr<Type>>;
+    struct Var {
+        std::string name;
+        std::shared_ptr<Type> type;
+        bool is_mut;
+    };
     std::string name;
     std::vector<Var> vars;
+    std::shared_ptr<Type> return_type;
 };
 
 class HirContext {
     std::vector<Scope> scope_stack;
 
-    Scope::Var find_var(const std::string& name) noexcept;
+    std::optional<Scope::Var> find_var(const std::string &name) noexcept;
 public:
 
-    void check_module(Module *mod) noexcept;
+    void check_module(const Module *mod) noexcept;
+
+    void check_expr(ExprNode *expr) noexcept;
+
+    void check_stmt(StmtNode *stmt) noexcept;
+
     void reset() noexcept;
-    std::shared_ptr<Type> inference_type(const std::shared_ptr<ExprNode>& type) noexcept;
+    std::shared_ptr<Type> inference_type(ExprNode *type) noexcept;
 };
 
 }

@@ -337,12 +337,17 @@ std::shared_ptr<StmtNode> Parser::parse_func() noexcept {
         } while (true);
     }
     consume(TokenType::RPAREN, ")");
-    consume(TokenType::ARROW, "->");
-    auto return_type = parse_type();
-
+    std::shared_ptr<Type> return_type;
+    if (match(TokenType::ARROW))
+        return_type = parse_type();
+    else return_type = std::make_shared<UnknownType>();
     auto body = std::static_pointer_cast<BlockExprNode>(parse_block());
     frame_count--;
-    return std::make_shared<FuncImplNode>(line, col, id, std::make_shared<ParamsDeclNode>(psline, pscol, params), return_type, body);
+    return std::make_shared<FuncImplNode>(
+        line, col, id,
+        std::make_shared<ParamsDeclNode>(psline, pscol, params),
+        return_type, body
+        );
 }
 
 std::shared_ptr<Type> Parser::parse_type() noexcept {
@@ -350,6 +355,11 @@ std::shared_ptr<Type> Parser::parse_type() noexcept {
     case TokenType::IDENTIFIER: {
         auto id = cur().text;
         advance();
+        static const std::unordered_map<std::string, runtime::ValueKind> basic_types = {
+            {"int", runtime::ValueKind::Int}, {"bool", runtime::ValueKind::Bool}
+        };
+        if (const auto it = basic_types.find(id); it != basic_types.end())
+            return std::make_shared<BasicType>(it->second);
 
         return std::make_shared<NamedType>(id);
     }
@@ -361,12 +371,13 @@ std::shared_ptr<Type> Parser::parse_type() noexcept {
 }
 
 std::shared_ptr<Module> Parser::parse_module(const std::string &name) noexcept {
+    const auto save_cur_mod = cur_module_name;
     cur_module_name = name;
     decltype(Module::decls) decls;
     while (pos < tokens.size() && tokens[pos].type != TokenType::END_OF_FILE) {
         decls.push_back(parse_stmt());
     }
-    cur_module_name = "";
+    cur_module_name = save_cur_mod;
     return std::make_shared<Module>(name, decls);
 }
 

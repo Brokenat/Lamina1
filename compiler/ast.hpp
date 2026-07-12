@@ -39,7 +39,12 @@ struct Type {
     virtual ~Type();
 
     [[nodiscard]] virtual bool equals(Type *other) const noexcept = 0;
+
+    static bool is_null_type(const Type* kind) noexcept {
+        return !kind || kind->kind == TypeKind::Unknown;
+    }
 };
+
 struct UnknownType : Type {
     explicit UnknownType() : Type(TypeKind::Unknown) {}
 
@@ -111,9 +116,9 @@ struct StmtNode : ASTNode {
 struct FuncImplNode;
 struct Module {
     std::string name;
-    std::vector<std::shared_ptr<ASTNode>> decls;
+    std::vector<std::shared_ptr<StmtNode>> decls;
     std::vector<FuncImplNode> top_func_def;
-    Module(std::string name, std::vector<std::shared_ptr<ASTNode>> decls) noexcept;
+    Module(std::string name, decltype(decls) decls) noexcept;
 };
 struct ExprStmtNode : StmtNode {
     std::shared_ptr<ExprNode> expr;

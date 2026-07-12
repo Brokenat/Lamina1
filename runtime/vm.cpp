@@ -11,7 +11,7 @@ using namespace lmx::runtime;
 
 LaminaVM::LaminaVM(ConstantPoolInfo *cp, const int argc, char **argv) noexcept :
     cp(cp),
-    stack(new Value[65536]),
+    stack(new Value[LMX_VM_REG_COUNT * LMX_CALLSTACK_MAX_COUNT]),
     local_vars_bp(new Value[LMX_LOCAL_VAR_COUNT * LMX_CALLSTACK_MAX_COUNT]),
     local_vars_curp(local_vars_bp),
     global_vars(new Value[65536]),

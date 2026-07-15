@@ -12,13 +12,19 @@
 using namespace lmx;
 using namespace lmx::hir;
 
-std::optional<Scope::Var> HirContext::find_var(const std::string &name) noexcept {
+Scope::Scope(std::string name) noexcept : name(std::move(name)) {}
+
+std::optional<Scope::Var *> HirContext::find_var(const std::string &name) noexcept {
     for (auto& i : scope_stack | std::views::reverse) {
         for (auto& j : i.vars) {
-            if (j.name == name) return j;
+            if (j.name == name) return &j;
         }
     }
     return std::nullopt;
+}
+
+HirContext::HirContext() noexcept {
+    scope_stack.emplace_back("@GLOBAL");
 }
 
 std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
@@ -43,7 +49,7 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
     case ASTKind::Identifier: {
         const auto node = reinterpret_cast<IdentifierNode*>(type);
         if (node->type && node->type->kind != TypeKind::Unknown) return node->type;
-        if (find_var(node->id).has_value())return find_var(node->id)->type;
+        if (find_var(node->id).has_value())return (*find_var(node->id))->type;
         break;
     }
     case ASTKind::Unary: {
@@ -124,7 +130,7 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         auto re = find_var(node->id);
         if (!re.has_value())
             throw_error(ErrorType::Analysis, "undefined var `" + node->id + "`", node->line, node->col);
-        node->type = re->type;
+        node->type = (*re)->type;
         break;
     }
     case ASTKind::Unary: {
@@ -187,15 +193,15 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         check_expr(node->expr.get());
         break;
     }
-
-        break;
     case ASTKind::Exprs:
         break;
     case ASTKind::ParamsDeclNode:
         break;
     case ASTKind::FuncImpl: {
         auto* node = reinterpret_cast<FuncImplNode*>(stmt);
+        if (!is_global_scope()) throw_error(ErrorType::Analysis, "function only define in GlobalScope", stmt->line, stmt->col);
 
+        new_global_var(node->func_id, node->make_type());
         Scope scope;
         for (const auto& [name, ty] : node->params->stmts) {
             scope.vars.emplace_back(name, ty, true);
@@ -222,6 +228,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         break;
     }
     case ASTKind::VarDecl: {
+        auto node = reinterpret_cast<VarDeclNode*>(stmt);
 
         break;
     }
@@ -233,4 +240,40 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
     default: std::unreachable();
     }
 }
+
+bool HirContext::is_global_scope() noexcept {
+    return scope_stack.size() == 1;
+}
+
+void HirContext::new_var(std::string name, std::shared_ptr<Type> type, Scope *scope) noexcept {
+    scope->vars.emplace_back(std::move(name), std::move(type));
+}
+
+void HirContext::new_cur_scope_var(std::string name, std::shared_ptr<Type> type) noexcept {
+    scope_stack.back().vars.emplace_back(std::move(name), std::move(type));
+}
+
+void HirContext::new_global_var(std::string name, std::shared_ptr<Type> type) noexcept {
+    scope_stack[0].vars.emplace_back(std::move(name), std::move(type));
+}
+
+//
+// Scope *HirContext::parse_scope(ExprNode *node) noexcept {
+//
+//     switch (node->kind) {
+//     case ASTKind::Binary: {
+//         const auto id = reinterpret_cast<BinaryNode*>(node);
+//         auto left = parse_scope(id->lhs.get());
+//
+//         // todo!
+//         return std::nullopt;
+//         break;
+//     }
+//     case ASTKind::Identifier: {
+//         const auto id = reinterpret_cast<IdentifierNode*>(node);
+//         return &scope_stack.back();
+//     }
+//     default: std::unreachable();
+//     }
+// }
 

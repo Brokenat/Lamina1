@@ -77,6 +77,7 @@ struct FunctionType : Type {
 
     explicit FunctionType(std::vector<std::shared_ptr<Type>> params_ty, std::shared_ptr<Type> ret_ty) noexcept;
     bool equals(Type *other) const noexcept override;
+
 };
 struct NamedType : Type {
     std::string name;
@@ -218,27 +219,29 @@ struct ParamsDeclNode : StmtNode {
  * 代表仅声明函数
  */
 struct FuncImplNode : StmtNode {
-    std::shared_ptr<StmtNode> func_id;
+    std::string func_id;
     std::shared_ptr<ParamsDeclNode> params;
     std::shared_ptr<Type> return_type;
 
     std::shared_ptr<BlockExprNode> block;
 
     explicit FuncImplNode(size_t line, size_t col,
-        std::shared_ptr<StmtNode> func_id,
+        decltype(func_id) func_id,
         std::shared_ptr<ParamsDeclNode> params,
         std::shared_ptr<Type> return_type,
         std::shared_ptr<BlockExprNode> block
         ) noexcept;
+
+    std::shared_ptr<FunctionType> make_type() noexcept;
 };
 
 struct VarDeclNode : StmtNode {
-    std::shared_ptr<ExprStmtNode> id; // ExprStmt<binary: ::> or identifier
+    std::string id; // ExprStmt<binary: ::> or identifier
     std::shared_ptr<Type> type;
     bool is_mutable;
     std::shared_ptr<ExprNode> init_value{nullptr};
 
-    explicit VarDeclNode(size_t line, size_t col, std::shared_ptr<ExprStmtNode> id, std::shared_ptr<Type> type, bool is_mutable) noexcept;
+    explicit VarDeclNode(size_t line, size_t col, decltype(id) id, std::shared_ptr<Type> type, bool is_mutable) noexcept;
 };
 
 struct IfExprNode : ExprNode {

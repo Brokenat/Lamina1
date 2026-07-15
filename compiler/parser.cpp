@@ -264,9 +264,13 @@ std::shared_ptr<StmtNode> Parser::parse_var_decl() noexcept {
     if (match(TokenType::KW_VAR)) is_mutable = true;
     advance();
     size_t line = cur().line, col = cur().col;
-    auto id = parse_multi_naming();
-    consume(TokenType::COLON, ":");
-    auto type = parse_type();
+    // auto id = parse_multi_naming();
+    auto id = cur().text;
+    consume(TokenType::IDENTIFIER, "identifier");
+    // consume(TokenType::COLON, ":");
+    std::shared_ptr<Type> type;
+    if (!match(TokenType::ASSIGN)) type = parse_type();
+    else type = std::make_shared<UnknownType>();
 
     return std::make_shared<VarDeclNode>(line, col, id, type, is_mutable);
 }
@@ -319,7 +323,9 @@ std::shared_ptr<ExprNode> Parser::parse_block() noexcept {
 
 std::shared_ptr<StmtNode> Parser::parse_func() noexcept {
     auto line = cur().line, col = cur().col;
-    auto id = parse_multi_naming();
+    // auto id = parse_multi_naming();
+    auto id = cur().text;
+    consume(TokenType::IDENTIFIER, "identifier");
 
     decltype(ParamsDeclNode::stmts) params;
 

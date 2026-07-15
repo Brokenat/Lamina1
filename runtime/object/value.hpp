@@ -62,8 +62,6 @@ struct Value {
     explicit operator bool() const noexcept;
 
     [[nodiscard]] std::string to_string() const noexcept;
-
-
 };
 
 }

@@ -28,6 +28,7 @@ HirContext::HirContext() noexcept {
 }
 
 std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
+    if (!type) return nullptr;
     switch (type->kind) {
     case ASTKind::Literal: {
         const auto node = reinterpret_cast<LiteralNode*>(type);
@@ -88,6 +89,8 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
     }
     case ASTKind::SuffixParen: {
         const auto node = reinterpret_cast<SuffixParenNode*>(type);
+        const auto left_ty = std::reinterpret_pointer_cast<FunctionType>(inference_type(node->expr.get()));
+        return left_ty->ret_ty;
         break;
     }
     case ASTKind::SuffixBracket: {
@@ -172,10 +175,23 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         break;
     }
     case ASTKind::SuffixParen: {
-        //auto func = find_var();
+        const auto node = reinterpret_cast<SuffixParenNode*>(expr);
+        check_expr(node->expr.get());
+        const auto left = inference_type(node->expr.get());
+        if (left->kind != TypeKind::Function) {
+            throw_error(ErrorType::Analysis, "not a function type", node->line, node->col);
+            break;
+        }
+        if (std::reinterpret_pointer_cast<FunctionType>(left)->params_ty.size() != node->suffix->exprs.size()) {
+            throw_error(ErrorType::Analysis, "mismatch args count in function calling", node->line, node->col);
+        }
+        node->type = std::reinterpret_pointer_cast<FunctionType>(left)->ret_ty;
         break;
     }
     case ASTKind::SuffixBracket: {
+        const auto node = reinterpret_cast<SuffixBracketNode*>(expr);
+        check_expr(node->expr.get());
+        const auto left = inference_type(node->expr.get());
 
         break;
     }
@@ -228,12 +244,20 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         break;
     }
     case ASTKind::VarDecl: {
-        auto node = reinterpret_cast<VarDeclNode*>(stmt);
-
+        const auto node = reinterpret_cast<VarDeclNode*>(stmt);
+        inference_type(node->init_value.get());
+        if (Type::is_null_type(node->type.get())) {
+            if (!node->init_value) {
+                throw_error(ErrorType::Analysis, "the var `" + node->id + "` type not found", node->line, node->col);
+            } else node->type = inference_type(node->init_value.get());
+        } else {
+            if (!node->type->equals(node->init_value->type.get())) {
+                throw_error(ErrorType::Analysis, "the var `" + node->id + "` type mismatch with the initialization type", node->line, node->col);
+            }
+        }
+        new_cur_scope_var(node->id, node->type);
         break;
     }
-    case ASTKind::GlobalVarDecl:
-        break;
     case ASTKind::BreakStmt: {
         break;
     }

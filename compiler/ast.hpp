@@ -23,7 +23,7 @@ enum class ASTKind {
     SuffixParen,
     SuffixBracket,
     ParamsDeclNode,
-    FuncImpl, TailReturn, IfExpr, VarDecl, GlobalVarDecl, BreakStmt
+    FuncImpl, TailReturn, IfExpr, VarDecl, BreakStmt
 };
 
 enum class TypeKind {

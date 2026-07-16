@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
 func foo(a int, b int) {
     a + b
 }
+let v = foo(3, 7)
 )";
     auto tokens = lmx::Lexer(code).tokenize(code);
     lmx::Parser parser(tokens);

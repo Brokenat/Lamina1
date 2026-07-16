@@ -206,7 +206,8 @@ void AstPrinter::print_stmt(std::ostringstream &ss, const StmtNode &node, int in
             auto &fn = static_cast<const FuncImplNode &>(node);
             print_indent(ss, indent);
             ss << "FuncImpl\n";
-            if (fn.func_id) print_stmt(ss, *fn.func_id, indent + 1);
+            print_indent(ss, indent + 1);
+            ss << fn.func_id << "\n";
             if (fn.params) print_stmt(ss, *fn.params, indent + 1);
             if (fn.return_type) {
                 print_indent(ss, indent + 1);
@@ -220,7 +221,8 @@ void AstPrinter::print_stmt(std::ostringstream &ss, const StmtNode &node, int in
             auto &vd = static_cast<const VarDeclNode &>(node);
             print_indent(ss, indent);
             ss << "VarDecl (mutable=" << (vd.is_mutable ? "true" : "false") << ")\n";
-            if (vd.id) print_stmt(ss, *vd.id, indent + 1);
+            print_indent(ss, indent + 1);
+            ss << vd.id << "\n";
             if (vd.type) {
                 print_indent(ss, indent + 1);
                 ss << "type: ";

@@ -112,12 +112,12 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
 }
 
 
-void HirContext::reset() noexcept {
-    scope_stack.clear();
-}
+// void HirContext::reset() noexcept {
+//     scope_stack.clear();
+// }
 
 void HirContext::check_module(const Module *mod) noexcept {
-    reset();
+    // reset();
     for (auto& node : mod->decls) {
         check_stmt(node.get());
     }
@@ -161,7 +161,10 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         if (lty->kind != TypeKind::Basic) goto binary_type_mismatch;
         if (const auto t2 = std::reinterpret_pointer_cast<BasicType>(lty);
             t2->type != runtime::ValueKind::Int && t2->type != runtime::ValueKind::Fraction) goto binary_type_mismatch;
-
+        // static const std::map<runtime::ValueKind, std::unordered_map<std::string, runtime::ValueKind>> op_types = {
+        //     {"+", runtime::ValueKind::Int},
+        // };
+        // todo!
         node->type = lty;
         break;
         binary_type_mismatch:
@@ -192,10 +195,16 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         const auto node = reinterpret_cast<SuffixBracketNode*>(expr);
         check_expr(node->expr.get());
         const auto left = inference_type(node->expr.get());
-
+        if (left->kind != TypeKind::Array) {
+            throw_error(ErrorType::Analysis, "must be array type", node->line, node->col);
+            break;
+        }
+        node->type = std::reinterpret_pointer_cast<ArrayType>(left)->type;
         break;
     }
     case ASTKind::IfExpr: {
+        const auto node = reinterpret_cast<IfExprNode*>(expr);
+        check_expr(node->cond.get());
         break;
     }
     default: std::unreachable();
@@ -218,6 +227,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         if (!is_global_scope()) throw_error(ErrorType::Analysis, "function only define in GlobalScope", stmt->line, stmt->col);
 
         new_global_var(node->func_id, node->make_type());
+        auto& ref = scope_stack[0].vars.back();
         Scope scope;
         for (const auto& [name, ty] : node->params->stmts) {
             scope.vars.emplace_back(name, ty, true);
@@ -229,6 +239,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         check_expr(node->block.get());
         if (Type::is_null_type(node->return_type.get())) node->return_type = node->block->type;
         scope_stack.pop_back();
+        ref.type = node->make_type();
         break;
     }
     case ASTKind::Return: {
@@ -245,7 +256,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
     }
     case ASTKind::VarDecl: {
         const auto node = reinterpret_cast<VarDeclNode*>(stmt);
-        inference_type(node->init_value.get());
+        check_expr(node->init_value.get());
         if (Type::is_null_type(node->type.get())) {
             if (!node->init_value) {
                 throw_error(ErrorType::Analysis, "the var `" + node->id + "` type not found", node->line, node->col);

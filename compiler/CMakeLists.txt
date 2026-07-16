@@ -6,4 +6,6 @@ add_library(laminac
     parser.cpp
         hir.cpp
         hir.hpp
+        mir.cpp
+        mir.hpp
 )

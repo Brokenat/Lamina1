@@ -23,7 +23,8 @@ enum class ASTKind {
     SuffixParen,
     SuffixBracket,
     ParamsDeclNode,
-    FuncImpl, TailReturn, IfExpr, VarDecl, BreakStmt
+    FuncImpl, TailReturn, IfExpr, VarDecl, BreakStmt,
+    AssignStmt, AsExpr
 };
 
 enum class TypeKind {
@@ -179,8 +180,7 @@ struct UnaryNode : ExprNode {
 struct BinaryNode : ExprNode {
     enum class Op {
         Add, Sub, Mul, Div, Mod, Pow,
-        Gt, Ge, Lt, Le, Eq, Ne, And, Or, Dot,
-        Assign, ColonColon
+        Gt, Ge, Lt, Le, Eq, Ne, And, Or, Dot
     };
     Op op;
     std::shared_ptr<ExprNode> lhs;
@@ -252,12 +252,30 @@ struct VarDeclNode : StmtNode {
     explicit VarDeclNode(size_t line, size_t col, decltype(id) id, std::shared_ptr<Type> type, bool is_mutable) noexcept;
 };
 
+struct AssignStmtNode : StmtNode {
+    std::shared_ptr<ExprNode> lhs;
+    std::shared_ptr<ExprNode> rhs;
+
+    explicit AssignStmtNode(size_t line, size_t col,
+                            std::shared_ptr<ExprNode> lhs,
+                            std::shared_ptr<ExprNode> rhs) noexcept;
+};
+
 struct IfExprNode : ExprNode {
     std::shared_ptr<ExprNode> cond;
     std::shared_ptr<ExprNode> then;
     std::shared_ptr<ASTNode> els;
 
     explicit IfExprNode(size_t line, size_t col, std::shared_ptr<ExprNode> cond, std::shared_ptr<ExprNode> then, std::shared_ptr<ASTNode> els) noexcept;
+};
+
+struct AsExprNode : ExprNode {
+    std::shared_ptr<ExprNode> expr;
+    std::shared_ptr<Type> cast_type;
+
+    explicit AsExprNode(size_t line, size_t col,
+                        std::shared_ptr<ExprNode> expr,
+                        std::shared_ptr<Type> cast_type) noexcept;
 };
 
 }

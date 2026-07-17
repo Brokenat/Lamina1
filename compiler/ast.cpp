@@ -159,9 +159,18 @@ FuncImplNode::FuncImplNode(const size_t line, const size_t col,
 IfExprNode::IfExprNode(const size_t line, const size_t col, std::shared_ptr<ExprNode> cond, std::shared_ptr<ExprNode> then, std::shared_ptr<ASTNode> els) noexcept
     : ExprNode(ASTKind::IfExpr, line, col), cond(std::move(cond)), then(std::move(then)), els(std::move(els)) {}
 
+AsExprNode::AsExprNode(const size_t line, const size_t col,
+                       std::shared_ptr<ExprNode> expr,
+                       std::shared_ptr<Type> cast_type) noexcept
+    : ExprNode(ASTKind::AsExpr, line, col), expr(std::move(expr)), cast_type(std::move(cast_type)) {}
+
 VarDeclNode::VarDeclNode(const size_t line, const size_t col, decltype(id) id, std::shared_ptr<Type> type, const bool is_mutable) noexcept
     : StmtNode(ASTKind::VarDecl, line, col), id(std::move(id)), type(std::move(type)), is_mutable(is_mutable) {}
 
+AssignStmtNode::AssignStmtNode(const size_t line, const size_t col,
+                               std::shared_ptr<ExprNode> lhs,
+                               std::shared_ptr<ExprNode> rhs) noexcept
+    : StmtNode(ASTKind::AssignStmt, line, col), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
 std::shared_ptr<FunctionType> FuncImplNode::make_type() noexcept {
     decltype(FunctionType::params_ty) params_ty;

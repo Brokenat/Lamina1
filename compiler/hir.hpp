@@ -34,9 +34,9 @@ class HirContext {
 
     std::optional<Scope::Var *> find_var(const std::string &name) noexcept;
 
-    void new_var(std::string name, std::shared_ptr<Type> type, Scope *scope) noexcept;
-    void new_cur_scope_var(std::string name, std::shared_ptr<Type> type) noexcept;
-    void new_global_var(std::string name, std::shared_ptr<Type> type) noexcept;
+    void new_var(std::string name, std::shared_ptr<Type> type, Scope *scope, bool is_mut = false) noexcept;
+    void new_cur_scope_var(std::string name, std::shared_ptr<Type> type, bool is_mut = false) noexcept;
+    void new_global_var(std::string name, std::shared_ptr<Type> type, bool is_mut = false) noexcept;
 
     bool is_global_scope() noexcept;
 public:

@@ -125,8 +125,7 @@ void AstPrinter::print_expr(std::ostringstream &ss, const ExprNode &node,
                 case BinaryNode::Op::And: ss << "and"; break;
                 case BinaryNode::Op::Or: ss << "or"; break;
                 case BinaryNode::Op::Dot: ss << "."; break;
-                case BinaryNode::Op::Assign: ss << "="; break;
-                case BinaryNode::Op::ColonColon: ss << "::"; break;
+                // case BinaryNode::Op::ColonColon: ss << "::"; break;
             }
             if (node.type) { ss << " : "; print_type(ss, *node.type); }
             ss << "\n";
@@ -187,6 +186,19 @@ void AstPrinter::print_expr(std::ostringstream &ss, const ExprNode &node,
             print_expr(ss, *ifn.then, child_prefix + "├── ", child_prefix + "│   ");
             if (ifn.els) {
                 print_node(ss, *ifn.els, child_prefix + "└── ", child_prefix + "    ");
+            }
+            break;
+        }
+        case ASTKind::AsExpr: {
+            auto &as = static_cast<const AsExprNode &>(node);
+            ss << line_prefix << "As";
+            if (node.type) { ss << " : "; print_type(ss, *node.type); }
+            ss << "\n";
+            if (as.expr) print_expr(ss, *as.expr, child_prefix + "├── ", child_prefix + "│   ");
+            if (as.cast_type) {
+                ss << child_prefix << "└── " << "Type ";
+                print_type(ss, *as.cast_type);
+                ss << "\n";
             }
             break;
         }
@@ -262,6 +274,13 @@ void AstPrinter::print_stmt(std::ostringstream &ss, const StmtNode &node,
             }
             break;
         }
+        case ASTKind::AssignStmt: {
+            auto &as = static_cast<const AssignStmtNode &>(node);
+            ss << line_prefix << "Assign\n";
+            if (as.lhs) print_expr(ss, *as.lhs, child_prefix + "├── ", child_prefix + "│   ");
+            if (as.rhs) print_expr(ss, *as.rhs, child_prefix + "└── ", child_prefix + "    ");
+            break;
+        }
         default:
             ss << line_prefix << "UnknownStmt(" << static_cast<int>(node.kind) << ")\n";
             break;
@@ -279,6 +298,7 @@ static bool is_expr_kind(ASTKind kind) {
         case ASTKind::SuffixParen:
         case ASTKind::SuffixBracket:
         case ASTKind::IfExpr:
+        case ASTKind::AsExpr:
             return true;
         default:
             return false;

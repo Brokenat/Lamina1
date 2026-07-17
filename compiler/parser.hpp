@@ -8,7 +8,6 @@
 
 namespace lmx {
 class LMC_API Parser {
-    std::shared_ptr<ExprNode> parse_assign()        noexcept;   // =
     std::shared_ptr<ExprNode> parse_logical()       noexcept;   // or and
     std::shared_ptr<ExprNode> parse_equality()      noexcept;   // == !=
     std::shared_ptr<ExprNode> parse_relational()    noexcept;   // > < >= <=
@@ -21,7 +20,7 @@ class LMC_API Parser {
     std::shared_ptr<ExprNode> parse_block()         noexcept;
     std::shared_ptr<ExprNode> parse_if()            noexcept;
     std::shared_ptr<Type> parse_type() noexcept;
-    std::shared_ptr<ExprStmtNode> parse_multi_naming()    noexcept;
+    // std::shared_ptr<ExprStmtNode> parse_multi_naming()    noexcept;
     std::shared_ptr<ExprStmtNode> parse_param_name()      noexcept;
 
 

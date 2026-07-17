@@ -106,6 +106,10 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
 
         return inference_type(node->then.get());
     }
+    case ASTKind::AsExpr: {
+        const auto node = reinterpret_cast<AsExprNode*>(type);
+        return node->cast_type;
+    }
     default: std::unreachable();
     }
     return std::make_shared<NoneType>();
@@ -159,12 +163,10 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         node->lhs->type = lty;
         node->rhs->type = rty;
         if (!lty->equals(rty.get())) throw_error(ErrorType::Analysis, "binary operation type mismatch", expr->line, expr->col);
-        if (node->op == BinaryNode::Op::Assign) break;
-
         if (lty->kind != TypeKind::Basic) goto binary_type_mismatch;
         //if (const auto t2 = std::reinterpret_pointer_cast<BasicType>(lty);
          //   t2->type != runtime::ValueKind::Int && t2->type != runtime::ValueKind::Fraction) goto binary_type_mismatch;
-        static const std::map<runtime::ValueKind, std::unordered_map<BinaryNode::Op, runtime::ValueKind>> op_types = {
+        static const std::map<runtime::ValueKind, std::map<BinaryNode::Op, runtime::ValueKind>> op_types = {
             {runtime::ValueKind::Int, {
                 {BinaryNode::Op::Add, runtime::ValueKind::Int},
                 {BinaryNode::Op::Sub, runtime::ValueKind::Int},
@@ -248,6 +250,12 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         check_expr(node->cond.get());
         break;
     }
+    case ASTKind::AsExpr: {
+        const auto node = reinterpret_cast<AsExprNode*>(expr);
+        check_expr(node->expr.get());
+        node->type = node->cast_type;
+        break;
+    }
     default: std::unreachable();
     }
 }
@@ -307,7 +315,32 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
                 throw_error(ErrorType::Analysis, "the var `" + node->id + "` type mismatch with the initialization type", node->line, node->col);
             }
         }
-        new_cur_scope_var(node->id, node->type);
+        new_cur_scope_var(node->id, node->type, node->is_mutable);
+        break;
+    }
+    case ASTKind::AssignStmt: {
+        const auto node = reinterpret_cast<AssignStmtNode*>(stmt);
+        check_expr(node->lhs.get());
+        check_expr(node->rhs.get());
+        node->lhs->type = inference_type(node->lhs.get());
+        node->rhs->type = inference_type(node->rhs.get());
+        if (node->lhs->kind != ASTKind::Identifier) {
+            throw_error(ErrorType::Analysis, "left side of assignment must be an identifier", node->line, node->col);
+            break;
+        }
+        const auto id = reinterpret_cast<IdentifierNode*>(node->lhs.get());
+        const auto var = find_var(id->id);
+        if (!var.has_value()) {
+            throw_error(ErrorType::Analysis, "undefined var `" + id->id + "`", node->line, node->col);
+            break;
+        }
+        if (!(*var)->is_mut) {
+            throw_error(ErrorType::Analysis, "cannot assign to immutable var `" + id->id + "`", node->line, node->col);
+            break;
+        }
+        if (!node->lhs->type->equals(node->rhs->type.get())) {
+            throw_error(ErrorType::Analysis, "assignment type mismatch", node->line, node->col);
+        }
         break;
     }
     case ASTKind::BreakStmt: {
@@ -321,16 +354,16 @@ bool HirContext::is_global_scope() noexcept {
     return scope_stack.size() == 1;
 }
 
-void HirContext::new_var(std::string name, std::shared_ptr<Type> type, Scope *scope) noexcept {
-    scope->vars.emplace_back(std::move(name), std::move(type));
+void HirContext::new_var(std::string name, std::shared_ptr<Type> type, Scope *scope, bool is_mut) noexcept {
+    scope->vars.emplace_back(std::move(name), std::move(type), is_mut);
 }
 
-void HirContext::new_cur_scope_var(std::string name, std::shared_ptr<Type> type) noexcept {
-    scope_stack.back().vars.emplace_back(std::move(name), std::move(type));
+void HirContext::new_cur_scope_var(std::string name, std::shared_ptr<Type> type, bool is_mut) noexcept {
+    scope_stack.back().vars.emplace_back(std::move(name), std::move(type), is_mut);
 }
 
-void HirContext::new_global_var(std::string name, std::shared_ptr<Type> type) noexcept {
-    scope_stack[0].vars.emplace_back(std::move(name), std::move(type));
+void HirContext::new_global_var(std::string name, std::shared_ptr<Type> type, bool is_mut) noexcept {
+    scope_stack[0].vars.emplace_back(std::move(name), std::move(type), is_mut);
 }
 
 //

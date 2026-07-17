@@ -11,7 +11,6 @@ static std::string cur_module_name;
 
 static BinaryNode::Op token_to_binary_op(const TokenType type) {
     switch (type) {
-    case TokenType::ASSIGN: return BinaryNode::Op::Assign;
     case TokenType::KW_OR: return BinaryNode::Op::Or;
     case TokenType::KW_AND: return BinaryNode::Op::And;
     case TokenType::EQ: return BinaryNode::Op::Eq;
@@ -27,7 +26,7 @@ static BinaryNode::Op token_to_binary_op(const TokenType type) {
     case TokenType::OPER_MOD: return BinaryNode::Op::Mod;
     case TokenType::OPER_POW: return BinaryNode::Op::Pow;
     case TokenType::DOT: return BinaryNode::Op::Dot;
-    case TokenType::COL_COLON: return BinaryNode::Op::ColonColon;
+    // case TokenType::COL_COLON: return BinaryNode::Op::ColonColon;
     default: std::unreachable();
     }
 }
@@ -83,10 +82,6 @@ line = cur().line, col = cur().col;\
 return node;
 
 #define PARSER_BINOP_L(last, logic,  ...) PARSER_BINOP(last, last, logic, __VA_ARGS__)
-
-std::shared_ptr<ExprNode> Parser::parse_assign() noexcept {
-    PARSER_BINOP(parse_assign, parse_logical, if, cur().type == TokenType::ASSIGN)
-}
 
 std::shared_ptr<ExprNode> Parser::parse_logical() noexcept {
     PARSER_BINOP_L(parse_equality, while,
@@ -145,17 +140,17 @@ std::shared_ptr<ExprNode> Parser::parse_term() noexcept {
 
 }
 
-std::shared_ptr<ExprStmtNode> Parser::parse_multi_naming() noexcept {
-    size_t line = cur().line, col = cur().col;
-    std::shared_ptr<ExprNode> naming = std::make_shared<IdentifierNode>(line, col, cur().text);
-    advance();
-    while (match(TokenType::COL_COLON)) {
-        advance();
-        naming = std::make_shared<BinaryNode>(line, col, naming, BinaryNode::Op::ColonColon, std::make_shared<IdentifierNode>(cur().line, cur().col, cur().text));
-        advance();
-    }
-    return std::make_shared<ExprStmtNode>(line, col, naming);
-}
+// std::shared_ptr<ExprStmtNode> Parser::parse_multi_naming() noexcept {
+//     size_t line = cur().line, col = cur().col;
+//     std::shared_ptr<ExprNode> naming = std::make_shared<IdentifierNode>(line, col, cur().text);
+//     advance();
+//     while (match(TokenType::COL_COLON)) {
+//         advance();
+//         naming = std::make_shared<BinaryNode>(line, col, naming, BinaryNode::Op::ColonColon, std::make_shared<IdentifierNode>(cur().line, cur().col, cur().text));
+//         advance();
+//     }
+//     return std::make_shared<ExprStmtNode>(line, col, naming);
+// }
 
 std::shared_ptr<ExprStmtNode> Parser::parse_param_name() noexcept {
     size_t line = cur().line, col = cur().col;
@@ -192,7 +187,7 @@ std::shared_ptr<ExprNode> Parser::parse_factor() noexcept {
         }
         case TokenType::LBRACK: {
             advance();
-            auto e = parse_assign();
+            auto e = parse_expr();
             consume(TokenType::RBRACK, "]");
             primary = std::make_shared<SuffixBracketNode>(line, col, primary, e);
             break;
@@ -222,7 +217,7 @@ std::shared_ptr<ExprNode> Parser::parse_primary() noexcept {
     }
     case TokenType::LPAREN: {
         advance();
-        auto e = parse_assign();
+        auto e = parse_expr();
         consume(TokenType::RPAREN, ")");
         return e;
     }
@@ -253,10 +248,12 @@ std::shared_ptr<ExprNode> Parser::parse_primary() noexcept {
 }
 
 std::shared_ptr<ExprNode> Parser::parse_expr() noexcept {
-    auto result = parse_assign();
+    auto line = cur().line, col = cur().col;
+    auto result = parse_logical();
     if (match(TokenType::KW_AS)) {
         advance();
-        result->type = parse_type();
+        auto cast_type = parse_type();
+        result = std::make_shared<AsExprNode>(line, col, result, cast_type);
     }
     return result;
 }
@@ -272,7 +269,13 @@ std::shared_ptr<StmtNode> Parser::parse_stmt() noexcept {
         return std::static_pointer_cast<VarDeclNode>(parse_var());
     }
     default: {
-        return std::make_shared<ExprStmtNode>(line, col, parse_expr());
+        auto expr = parse_expr();
+        if (match(TokenType::ASSIGN)) {
+            advance();
+            auto rhs = parse_expr();
+            return std::make_shared<AssignStmtNode>(line, col, expr, rhs);
+        }
+        return std::make_shared<ExprStmtNode>(line, col, expr);
     }
     }
 }

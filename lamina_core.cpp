@@ -12,20 +12,31 @@
 #include "runtime/vm.hpp"
 #include <iostream>
 #include <cstdlib>
+#include <cstring>
 
 LmState lmx_newState() {
-    return LmState {LmLinkedNode{
-            nullptr, nullptr
-        }};
+    auto* node = static_cast<LmLinkedNode *>(malloc(sizeof(LmLinkedNode)));
+    memset(node, 0, sizeof(LmLinkedNode));
+    return LmState {node};
 }
 void lmx_deleteState(const LmState* state) {
-    const LmLinkedNode* node = &state->n;
-    while (node->next) {
+    const LmLinkedNode* node = state->n;
+    while (node->last) {
         if (node->ptr) free(node->ptr);
-        node = node->next;
+        const auto last = node->last;
+        free((void*)node);
+        node = last;
     }
 }
-
+static LmLinkedNode* newLickedNode(LmLinkedNode* old) {
+    auto* node = static_cast<LmLinkedNode *>(malloc(sizeof(LmLinkedNode)));
+    node->last = old;
+    return node;
+}
+static void lmx_state_addNode(LmState* state, void* ptr) {
+    state->n = newLickedNode(state->n);
+    state->n->ptr = ptr;
+}
 
 void lmx_printASTFromString(LmState *state, FILE *file, const char *code, const char* name) {
     std::string c = code;
@@ -34,4 +45,11 @@ void lmx_printASTFromString(LmState *state, FILE *file, const char *code, const 
     lmx::hir::HirContext().check_module(node.get());
     const auto ast_str = lmx::AstPrinter::print(*node);
     fwrite(ast_str.c_str(), ast_str.length(), 1, file);
+}
+
+LaminaVM* lmx_newLaminaVM(LmState* state, int argc, char** argv) {
+    auto* vm = static_cast<LaminaVM*>(malloc(sizeof(lmx::runtime::LaminaVM)));
+    new (vm) lmx::runtime::LaminaVM(nullptr, argc, argv);
+    lmx_state_addNode(state, vm);
+    return vm;
 }

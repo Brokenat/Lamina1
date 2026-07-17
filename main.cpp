@@ -18,6 +18,8 @@ let v = foo(false, true)
 
     lmx_printASTFromString(&state, stdout, code.c_str(), "test");
     // lmx::runtime::LaminaVM vm(nullptr, argc, argv);
+    auto vm = lmx_newLaminaVM(&state, argc, argv);
+
     lmx_deleteState(&state);
 
 }

@@ -11,11 +11,11 @@ extern "C" {
 #include <stdio.h>
 struct LmLinkedNode {
     void* ptr;
-    LmLinkedNode* next;
+    LmLinkedNode* last;
 };
 typedef LmLinkedNode LmLinkedNode;
 struct LmState {
-    LmLinkedNode n;
+    LmLinkedNode* n;
 };
 typedef LmState LmState;
 LmState lmx_newState();
@@ -40,7 +40,7 @@ void lmx_printASTFromString(LmState* state, FILE* file, const char* code, const 
 
 void lmx_moduleToFile(LmState* state, LmModule* module, const char* name);
 
-LaminaVM* lmx_newLaminaVM(LmState* state);
+LaminaVM* lmx_newLaminaVM(LmState* state, int argc, char** argv);
 
 int lmx_vmRunModule(LmState* state, LaminaVM* vm, LmModule* module);
 

@@ -46,6 +46,7 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
             return std::make_shared<BasicType>(runtime::ValueKind::Bool);
         }
         }
+        break;
     }
     case ASTKind::Identifier: {
         const auto node = reinterpret_cast<IdentifierNode*>(type);
@@ -228,10 +229,23 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
             throw_error(ErrorType::Analysis, "not a function type", node->line, node->col);
             break;
         }
-        if (std::reinterpret_pointer_cast<FunctionType>(left)->params_ty.size() != node->suffix->exprs.size()) {
+        const auto func_ty = std::reinterpret_pointer_cast<FunctionType>(left);
+        if (func_ty->params_ty.size() != node->suffix->exprs.size()) {
             throw_error(ErrorType::Analysis, "mismatch args count in function calling", node->line, node->col);
+            break;
+        }
+        const auto len = func_ty->params_ty.size();
+        for (auto i = 0; i < len; i++) {
+            const auto param = func_ty->params_ty[i];
+            check_expr(node->suffix->exprs[i].get());
+            if (!param->equals(node->suffix->exprs[i]->type.get())) {
+                goto arg_type_mismatch;
+            }
         }
         node->type = std::reinterpret_pointer_cast<FunctionType>(left)->ret_ty;
+        break;
+        arg_type_mismatch:
+            throw_error(ErrorType::Analysis, "type mismatch arg in function calling", node->line, node->col);
         break;
     }
     case ASTKind::SuffixBracket: {

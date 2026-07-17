@@ -1,5 +1,6 @@
 #include "ast_printer.hpp"
 
+#include <iostream>
 #include <ranges>
 
 namespace lmx {
@@ -17,10 +18,10 @@ void AstPrinter::print_type(std::ostringstream &ss, const Type &type) {
         switch (bt.type) {
             case runtime::ValueKind::Null:   ss << "Null"; break;
             case runtime::ValueKind::C_Ptr:  ss << "CPtr"; break;
-            case runtime::ValueKind::Obj:    ss << "Obj"; break;
+            case runtime::ValueKind::Obj:    ss << "Object"; break;
             case runtime::ValueKind::Int:    ss << "Int"; break;
             case runtime::ValueKind::Bool:   ss << "Bool"; break;
-            case runtime::ValueKind::Fraction: ss << "Fraction"; break;
+            case runtime::ValueKind::Fraction: ss << "Frac"; break;
         }
         break;
     }
@@ -29,7 +30,7 @@ void AstPrinter::print_type(std::ostringstream &ss, const Type &type) {
         break;
     case TypeKind::Function: {
         auto &ft = static_cast<const FunctionType &>(type);
-        ss << "fn(";
+        ss << "func(";
         for (size_t i = 0; i < ft.params_ty.size(); i++) {
             if (i > 0) ss << ", ";
             if (ft.params_ty[i]) print_type(ss, *ft.params_ty[i]);
@@ -72,12 +73,12 @@ void AstPrinter::print_expr(std::ostringstream &ss, const ExprNode &node,
         case ASTKind::Literal: {
             auto &lit = static_cast<const LiteralNode &>(node);
             ss << line_prefix;
-            switch (lit.kind) {
-                case LiteralNode::Kind::Integer: ss << "Integer"; break;
-                case LiteralNode::Kind::Float:   ss << "Float"; break;
-                case LiteralNode::Kind::String:  ss << "String"; break;
-                case LiteralNode::Kind::Boolean: ss << "Boolean"; break;
-            }
+            // switch (lit.kind) {
+            //     case LiteralNode::Kind::Integer: ss << "Int"; break;
+            //     case LiteralNode::Kind::Float:   ss << "Float"; break;
+            //     case LiteralNode::Kind::String:  ss << "String"; break;
+            //     case LiteralNode::Kind::Boolean: ss << "Bool"; break;
+            // }
             ss << " " << lit.val;
             if (node.type) { ss << " : "; print_type(ss, *node.type); }
             ss << "\n";

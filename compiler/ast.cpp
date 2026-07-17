@@ -3,6 +3,7 @@
 //
 
 #include "ast.hpp"
+#include "ast.hpp"
 #include <ranges>
 #include <utility>
 
@@ -113,13 +114,12 @@ SuffixBracketNode::SuffixBracketNode(const size_t line, const size_t col, std::s
     : ExprNode(ASTKind::SuffixBracket, line, col), expr(std::move(expr)), suffix(std::move(suffix)) {
 }
 
-UnaryNode::UnaryNode(const size_t line, const size_t col, std::string op, std::shared_ptr<ExprNode> expr) noexcept
-    : ExprNode(ASTKind::Unary, line, col), op(std::move(op)), expr(std::move(expr)) {
+UnaryNode::UnaryNode(const size_t line, const size_t col, const Op op, std::shared_ptr<ExprNode> expr) noexcept
+    : ExprNode(ASTKind::Unary, line, col), op(op), expr(std::move(expr)) {
 }
-
-BinaryNode::BinaryNode(const size_t line, const size_t col, std::shared_ptr<ExprNode> lhs, std::string op,
+BinaryNode::BinaryNode(const size_t line, const size_t col, std::shared_ptr<ExprNode> lhs, const Op op,
                        std::shared_ptr<ExprNode> rhs) noexcept
-    : ExprNode(ASTKind::Binary, line, col), op(std::move(op)), lhs(std::move(lhs)), rhs(std::move(rhs)) {
+    : ExprNode(ASTKind::Binary, line, col), lhs(std::move(lhs)), rhs(std::move(rhs)), op(op) {
 }
 
 ReturnNode::ReturnNode(const size_t line, const size_t col, std::shared_ptr<ExprNode> expr) noexcept

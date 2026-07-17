@@ -130,9 +130,11 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
     }
     case ASTKind::Identifier: {
         auto* node = reinterpret_cast<IdentifierNode*>(expr);
-        auto re = find_var(node->id);
-        if (!re.has_value())
+        const auto re = find_var(node->id);
+        if (!re.has_value()) {
             throw_error(ErrorType::Analysis, "undefined var `" + node->id + "`", node->line, node->col);
+            break;
+        }
         node->type = (*re)->type;
         break;
     }
@@ -157,15 +159,54 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         node->lhs->type = lty;
         node->rhs->type = rty;
         if (!lty->equals(rty.get())) throw_error(ErrorType::Analysis, "binary operation type mismatch", expr->line, expr->col);
+        if (node->op == BinaryNode::Op::Assign) break;
 
         if (lty->kind != TypeKind::Basic) goto binary_type_mismatch;
-        if (const auto t2 = std::reinterpret_pointer_cast<BasicType>(lty);
-            t2->type != runtime::ValueKind::Int && t2->type != runtime::ValueKind::Fraction) goto binary_type_mismatch;
-        // static const std::map<runtime::ValueKind, std::unordered_map<std::string, runtime::ValueKind>> op_types = {
-        //     {"+", runtime::ValueKind::Int},
-        // };
-        // todo!
-        node->type = lty;
+        //if (const auto t2 = std::reinterpret_pointer_cast<BasicType>(lty);
+         //   t2->type != runtime::ValueKind::Int && t2->type != runtime::ValueKind::Fraction) goto binary_type_mismatch;
+        static const std::map<runtime::ValueKind, std::unordered_map<BinaryNode::Op, runtime::ValueKind>> op_types = {
+            {runtime::ValueKind::Int, {
+                {BinaryNode::Op::Add, runtime::ValueKind::Int},
+                {BinaryNode::Op::Sub, runtime::ValueKind::Int},
+                {BinaryNode::Op::Mul, runtime::ValueKind::Int},
+                {BinaryNode::Op::Div, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Mod, runtime::ValueKind::Int},
+                {BinaryNode::Op::Pow, runtime::ValueKind::Int},
+                {BinaryNode::Op::Eq, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Ne, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Gt, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Ge, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Lt, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Le, runtime::ValueKind::Bool},
+            }},
+            {runtime::ValueKind::Fraction, {
+                {BinaryNode::Op::Add, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Sub, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Mul, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Div, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Mod, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Pow, runtime::ValueKind::Fraction},
+                {BinaryNode::Op::Eq, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Ne, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Gt, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Ge, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Lt, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Le, runtime::ValueKind::Bool},
+            }},
+            {runtime::ValueKind::Bool, {
+                {BinaryNode::Op::And, runtime::ValueKind::Bool},
+                {BinaryNode::Op::Or, runtime::ValueKind::Bool},
+            }}
+        };
+        {
+            const auto t2 = std::reinterpret_pointer_cast<BasicType>(lty)->type;
+            const auto &type_map = op_types.at(t2);
+            if (const auto it = type_map.find(node->op); it != type_map.end()) {
+                node->type = std::make_shared<BasicType>(it->second);
+            } else {
+                goto binary_type_mismatch;
+            }
+        }
         break;
         binary_type_mismatch:
         throw_error(ErrorType::Analysis, "binary operation cannot applied to this type", expr->line, expr->col);

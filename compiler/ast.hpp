@@ -167,18 +167,26 @@ struct SuffixBracketNode : ExprNode {
 };
 
 struct UnaryNode : ExprNode {
-    std::string op;
+    enum class Op {
+        Neg,
+    };
+    Op op;
     std::shared_ptr<ExprNode> expr;
 
-    explicit UnaryNode(size_t line, size_t col, std::string op, std::shared_ptr<ExprNode> expr) noexcept;
+    explicit UnaryNode(size_t line, size_t col, Op op, std::shared_ptr<ExprNode> expr) noexcept;
 };
 
 struct BinaryNode : ExprNode {
-    std::string op;
+    enum class Op {
+        Add, Sub, Mul, Div, Mod, Pow,
+        Gt, Ge, Lt, Le, Eq, Ne, And, Or, Dot,
+        Assign, ColonColon
+    };
+    Op op;
     std::shared_ptr<ExprNode> lhs;
     std::shared_ptr<ExprNode> rhs;
 
-    explicit BinaryNode(size_t line, size_t col, std::shared_ptr<ExprNode> lhs, std::string op,
+    explicit BinaryNode(size_t line, size_t col, std::shared_ptr<ExprNode> lhs, Op op,
                         std::shared_ptr<ExprNode> rhs) noexcept;
 };
 

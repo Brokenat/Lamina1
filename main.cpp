@@ -12,10 +12,12 @@
 
 int main(int argc, char** argv) {
     std::string code = R"(
-func foo(a int, b int) {
-    a + b
+func foo(a bool, b bool) {
+    var c = false
+    c = true
+    a and b and c
 }
-let v = foo(3, 7)
+let v = foo(false, true)
 )";
     auto tokens = lmx::Lexer(code).tokenize(code);
     lmx::Parser parser(tokens);

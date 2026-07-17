@@ -9,6 +9,29 @@ using namespace lmx;
 
 static std::string cur_module_name;
 
+static BinaryNode::Op token_to_binary_op(const TokenType type) {
+    switch (type) {
+    case TokenType::ASSIGN: return BinaryNode::Op::Assign;
+    case TokenType::KW_OR: return BinaryNode::Op::Or;
+    case TokenType::KW_AND: return BinaryNode::Op::And;
+    case TokenType::EQ: return BinaryNode::Op::Eq;
+    case TokenType::NE: return BinaryNode::Op::Ne;
+    case TokenType::GT: return BinaryNode::Op::Gt;
+    case TokenType::LT: return BinaryNode::Op::Lt;
+    case TokenType::LE: return BinaryNode::Op::Le;
+    case TokenType::GE: return BinaryNode::Op::Ge;
+    case TokenType::OPER_PLUS: return BinaryNode::Op::Add;
+    case TokenType::OPER_MINUS: return BinaryNode::Op::Sub;
+    case TokenType::OPER_MUL: return BinaryNode::Op::Mul;
+    case TokenType::OPER_DIV: return BinaryNode::Op::Div;
+    case TokenType::OPER_MOD: return BinaryNode::Op::Mod;
+    case TokenType::OPER_POW: return BinaryNode::Op::Pow;
+    case TokenType::DOT: return BinaryNode::Op::Dot;
+    case TokenType::COL_COLON: return BinaryNode::Op::ColonColon;
+    default: std::unreachable();
+    }
+}
+
 Parser::Parser(std::vector<Token> &tokens) noexcept : tokens(tokens) {}
 
 #define advance() \
@@ -52,7 +75,7 @@ bool Parser::peek_match(const TokenType t) const noexcept {
 auto line = cur().line, col = cur().col;\
 std::shared_ptr<ExprNode> node = last();   \
 logic (__VA_ARGS__) {    \
-auto op = cur().text;\
+auto op = token_to_binary_op(cur().type);\
 advance();\
 node = std::make_shared<BinaryNode>(line, col, node, op, then());         \
 line = cur().line, col = cur().col;\
@@ -110,13 +133,12 @@ std::shared_ptr<ExprNode> Parser::parse_exponent() noexcept {
 std::shared_ptr<ExprNode> Parser::parse_term() noexcept {
     size_t line = cur().line, col = cur().col;
 
-    switch (std::string op; cur().type) {
+    switch (cur().type) {
     case TokenType::OPER_MINUS:
     // case TokenType::OPER_MUL:
         {
-        op = cur().text;
         advance();
-        return std::make_shared<UnaryNode>(line, col, op, parse_factor());
+        return std::make_shared<UnaryNode>(line, col, UnaryNode::Op::Neg, parse_factor());
     }
     default:return parse_factor();
     }
@@ -128,9 +150,8 @@ std::shared_ptr<ExprStmtNode> Parser::parse_multi_naming() noexcept {
     std::shared_ptr<ExprNode> naming = std::make_shared<IdentifierNode>(line, col, cur().text);
     advance();
     while (match(TokenType::COL_COLON)) {
-        auto op = cur().text;
         advance();
-        naming = std::make_shared<BinaryNode>(line, col, naming, op, std::make_shared<IdentifierNode>(cur().line, cur().col, cur().text));
+        naming = std::make_shared<BinaryNode>(line, col, naming, BinaryNode::Op::ColonColon, std::make_shared<IdentifierNode>(cur().line, cur().col, cur().text));
         advance();
     }
     return std::make_shared<ExprStmtNode>(line, col, naming);
@@ -149,7 +170,7 @@ std::shared_ptr<ExprNode> Parser::parse_factor() noexcept {
     while (match(TokenType::DOT) || match(TokenType::LPAREN) || match(TokenType::LBRACK) || match(TokenType::COL_COLON)) {
         switch (cur().type) {
         case TokenType::DOT: case TokenType::COL_COLON: {
-            auto op = cur().text;
+            auto op = token_to_binary_op(cur().type);
             advance();
             primary = std::make_shared<BinaryNode>(line, col, primary, op, parse_primary());
             break;
@@ -209,6 +230,12 @@ std::shared_ptr<ExprNode> Parser::parse_primary() noexcept {
         auto id = cur().text;
         advance();
         return std::make_shared<IdentifierNode>(line, col, id);
+    }
+    case TokenType::TRUE_LITERAL:
+    case TokenType::FALSE_LITERAL: {
+        auto id = cur().text;
+        advance();
+        return std::make_shared<LiteralNode>(line, col, id, LiteralNode::Kind::Boolean);
     }
     case TokenType::KW_IF: {
         advance();

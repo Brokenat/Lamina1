@@ -12,6 +12,13 @@ add_library(laminaCore SHARED
     $<TARGET_OBJECTS:lamina_runtime>
 )
 
+set_target_properties(laminaCore PROPERTIES
+    CXX_EXCEPTIONS OFF
+)
+set_target_properties(laminaCore PROPERTIES
+    CXX_RTTI OFF
+)
+
 # 保持 laminac 作为独立静态库(供其他目标使用)
 set_target_properties(laminac PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

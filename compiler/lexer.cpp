@@ -233,6 +233,8 @@ Token Lexer::next() {
                     {"not", TokenType::NOT},    // 让! 和 not等价
                     {"import", TokenType::KW_IMPORT},
                     {"sym", TokenType::KW_SYM},
+                    {"true", TokenType::TRUE_LITERAL},
+                    {"false", TokenType::FALSE_LITERAL},
                 };
                 if (const auto it = keywords.find(id); it != keywords.end()) {
                     return {it->second, id, cur_line, cur_col};

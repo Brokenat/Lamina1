@@ -264,9 +264,9 @@ struct AssignStmtNode : StmtNode {
 struct IfExprNode : ExprNode {
     std::shared_ptr<ExprNode> cond;
     std::shared_ptr<ExprNode> then;
-    std::shared_ptr<ASTNode> els;
+    std::shared_ptr<ExprNode> els;
 
-    explicit IfExprNode(size_t line, size_t col, std::shared_ptr<ExprNode> cond, std::shared_ptr<ExprNode> then, std::shared_ptr<ASTNode> els) noexcept;
+    explicit IfExprNode(size_t line, size_t col, std::shared_ptr<ExprNode> cond, std::shared_ptr<ExprNode> then, std::shared_ptr<ExprNode> els) noexcept;
 };
 
 struct AsExprNode : ExprNode {

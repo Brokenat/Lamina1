@@ -14,6 +14,8 @@ using namespace lmx::hir;
 
 Scope::Scope(std::string name) noexcept : name(std::move(name)) {}
 
+Scope::Scope(const ScopeType scope) noexcept : scope(scope) {}
+
 std::optional<Scope::Var *> HirContext::find_var(const std::string &name) noexcept {
     for (auto& i : scope_stack | std::views::reverse) {
         for (auto& j : i.vars) {
@@ -76,8 +78,9 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
         break;
     }
     case ASTKind::Block: {
-        const auto node = reinterpret_cast<BlockExprNode*>(type);
-        if (node->stmts.back()->kind == ASTKind::TailReturn) {
+        if (const auto node = reinterpret_cast<BlockExprNode*>(type);
+            node->stmts.back()->kind == ASTKind::TailReturn)
+        {
             const auto tail_ret = std::reinterpret_pointer_cast<TailReturnNode>(node->stmts.back());
             if (tail_ret->expr &&
                 !Type::is_null_type(tail_ret->expr->type.get()) &&
@@ -163,7 +166,10 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         const auto rty = inference_type(node->rhs.get());
         node->lhs->type = lty;
         node->rhs->type = rty;
-        if (!lty->equals(rty.get())) throw_error(ErrorType::Analysis, "binary operation type mismatch", expr->line, expr->col);
+        if (!lty->equals(rty.get())) {
+            throw_error(ErrorType::Analysis, "binary operation type mismatch", expr->line, expr->col);
+            break;
+        }
         if (lty->kind != TypeKind::Basic) goto binary_type_mismatch;
         //if (const auto t2 = std::reinterpret_pointer_cast<BasicType>(lty);
          //   t2->type != runtime::ValueKind::Int && t2->type != runtime::ValueKind::Fraction) goto binary_type_mismatch;
@@ -216,9 +222,11 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         break;
     }
     case ASTKind::Block: {
-        auto node = reinterpret_cast<BlockExprNode*>(expr);
+        const auto node = reinterpret_cast<BlockExprNode*>(expr);
+        scope_stack.emplace_back(Scope::ScopeType::Block);
         for (auto& s : node->stmts) check_stmt(s.get());
-        expr->type = inference_type(expr);
+        expr->type = scope_stack.back().return_type;
+        scope_stack.pop_back();
         break;
     }
     case ASTKind::SuffixParen: {
@@ -262,12 +270,25 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
     case ASTKind::IfExpr: {
         const auto node = reinterpret_cast<IfExprNode*>(expr);
         check_expr(node->cond.get());
+        if (node->cond->type->kind != TypeKind::Basic &&
+            std::reinterpret_pointer_cast<BasicType>(node->cond->type)->type != runtime::ValueKind::Bool) {
+            throw_error(ErrorType::Analysis, "if expression condition must return bool type", node->line, node->col);
+        }
+        check_expr(node->then.get());
+        if (node->els) {
+            check_expr(node->els.get());
+            if (!node->then->type->equals(node->els->type.get())) {
+                throw_error(ErrorType::Analysis, "if express then and else cannot type mismatch", node->line, node->col);
+                break;
+            }
+        }
         break;
     }
     case ASTKind::AsExpr: {
-        const auto node = reinterpret_cast<AsExprNode*>(expr);
-        check_expr(node->expr.get());
-        node->type = node->cast_type;
+        // const auto node = reinterpret_cast<AsExprNode*>(expr);
+        // check_expr(node->expr.get());
+        // node->type = node->cast_type;
+        // todo!
         break;
     }
     default: std::unreachable();
@@ -281,10 +302,10 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         check_expr(node->expr.get());
         break;
     }
-    case ASTKind::Exprs:
-        break;
-    case ASTKind::ParamsDeclNode:
-        break;
+    //case ASTKind::Exprs:
+    //    break;
+    //case ASTKind::ParamsDeclNode:
+    //    break;
     case ASTKind::FuncImpl: {
         auto* node = reinterpret_cast<FuncImplNode*>(stmt);
         if (!is_global_scope()) throw_error(ErrorType::Analysis, "function only define in GlobalScope", stmt->line, stmt->col);
@@ -292,28 +313,49 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         new_global_var(node->func_id, node->make_type());
         auto& ref = scope_stack[0].vars.back();
         Scope scope;
+        scope.name = node->func_id;
+        scope.return_type = node->return_type;
         for (const auto& [name, ty] : node->params->stmts) {
             scope.vars.emplace_back(name, ty, true);
         }
         scope.name = "";
-        scope.return_type = node->return_type;
         scope_stack.push_back(scope);
 
         check_expr(node->block.get());
         if (Type::is_null_type(node->return_type.get())) node->return_type = node->block->type;
+        else {
+            if (!node->return_type->equals(node->block->type.get())) {
+                throw_error(ErrorType::Analysis, "return type mismatch in function `" + node->func_id + "`", node->line, node->col);
+            }
+        }
+
         scope_stack.pop_back();
         ref.type = node->make_type();
         break;
     }
     case ASTKind::Return: {
-        auto node = reinterpret_cast<ReturnNode*>(stmt);
+        const auto node = reinterpret_cast<ReturnNode*>(stmt);
         check_expr(node->expr.get());
         node->expr->type = inference_type(node->expr.get());
+        for (auto& s : scope_stack | std::views::reverse) {
+            if (s.scope == Scope::ScopeType::Function) {
+                if (!s.return_type) {
+                    s.return_type = node->expr->type;
+                    break;
+                }
+                if (!s.return_type->equals(node->expr->type.get())) {
+                    throw_error(ErrorType::Analysis, "return type mismatch in function `" + s.name + "`", node->line, node->col);
+                    goto return_fail_break;
+                }
+            }
+        }
+        return_fail_break:
         break;
     }
     case ASTKind::TailReturn: {
-        auto node = reinterpret_cast<TailReturnNode*>(stmt);
+        const auto node = reinterpret_cast<TailReturnNode*>(stmt);
         check_expr(node->expr.get());
+        scope_stack.back().return_type = node->expr->type;
         // node->expr->type = inference_type(node->expr.get());
         break;
     }

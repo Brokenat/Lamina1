@@ -7,12 +7,14 @@
 
 namespace lmx::mir {
 
-std::string to_string(MirType type) {
+std::string to_string(runtime::ValueKind type) {
     switch (type) {
-    case MirType::Int:    return "int";
-    case MirType::Frac:   return "frac";
-    case MirType::Bool:   return "bool";
-    case MirType::String: return "string";
+    case runtime::ValueKind::Int:    return "int";
+    case runtime::ValueKind::Fraction:   return "frac";
+    case runtime::ValueKind::Bool:   return "bool";
+    case runtime::ValueKind::Obj: return "obj";
+    case runtime::ValueKind::Null: return "null";
+    case runtime::ValueKind::C_Ptr:  return "c_ptr";
     }
     return "?";
 }
@@ -35,40 +37,30 @@ std::string to_string(MirOp op) {
     return "?";
 }
 
-std::string to_string(const MirRef &ref) {
-    std::ostringstream os;
-    os << to_string(ref.type) << " " << (ref.is_temp ? "%" : "$") << ref.name;
-    return os.str();
-}
-
 std::string to_string(const MirExpr &expr) {
     switch (expr.kind) {
-    case MirExpr::Kind::Literal:
-        return to_string(static_cast<const MirLiteral &>(expr));
+        return to_string(static_cast<const MirValue &>(expr));
     case MirExpr::Kind::Operate:
         return to_string(static_cast<const MirOperate &>(expr));
-    case MirExpr::Kind::Ref:
-        return to_string(static_cast<const MirRefExpr &>(expr));
+    case MirExpr::Kind::Value:
+        break;
     }
     return "?";
 }
 
-std::string to_string(const MirLiteral &lit) {
+std::string to_string(const MirValue &lit) {
     return to_string(lit.type) + " " + lit.data;
 }
 
 std::string to_string(const MirOperate &op) {
     std::ostringstream os;
     os << to_string(op.type) << " " << to_string(op.op);
-    for (const auto &arg : op.args) {
-        os << " " << to_string(arg);
-    }
+    // for (const auto &arg : op.args) {
+    //     os << " " << to_string(arg);
+    // }
     return os.str();
 }
 
-std::string to_string(const MirRefExpr &ref) {
-    return to_string(ref.ref);
-}
 
 std::string to_string(const MirStmt &stmt) {
     std::ostringstream os;

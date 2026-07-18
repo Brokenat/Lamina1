@@ -19,7 +19,7 @@ namespace lmx::runtime {
     [[nodiscard]] Fraction clone() const noexcept;
     [[nodiscard]] std::string to_string() const noexcept;
     [[nodiscard]] bool equals(const Fraction* other) const noexcept;
-
+    [[nodiscard]] Fraction operator-() const noexcept;
     [[nodiscard]] Fraction operator+(const Fraction& other) const noexcept;
     [[nodiscard]] Fraction operator-(const Fraction& other) const noexcept;
     [[nodiscard]] Fraction operator*(const Fraction& other) const noexcept;

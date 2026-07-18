@@ -310,7 +310,7 @@ std::shared_ptr<ExprNode> Parser::parse_if() noexcept {
     auto cond = parse_expr();
     frame_count++;
     auto then = parse_block();
-    std::shared_ptr<ASTNode> els = nullptr;
+    std::shared_ptr<ExprNode> els = nullptr;
     if (match(TokenType::KW_ELSE)) {
         advance();
         if (match(TokenType::KW_IF)) {

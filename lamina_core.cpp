@@ -44,7 +44,9 @@ void lmx_printASTFromString(LmState *state, FILE *file, const char *code, const 
     const auto node = lmx::Parser(tokens).parse_module(name);
     lmx::hir::HirContext().check_module(node.get());
     const auto ast_str = lmx::AstPrinter::print(*node);
-    fwrite(ast_str.c_str(), ast_str.length(), 1, file);
+    if (fwrite(ast_str.c_str(), 1, ast_str.length(), file) != ast_str.length()) {
+        fprintf(stderr, "Error writing AST to file\n");
+    }
 }
 
 LaminaVM* lmx_newLaminaVM(LmState* state, int argc, char** argv) {

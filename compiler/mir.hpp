@@ -7,20 +7,31 @@
 #include <string>
 #include <vector>
 
+#include "ast.hpp"
+
 namespace lmx::mir {
 
-enum class MirType { Int, Frac, Bool, String };
+using MirType = Type;
+using MirBasicType = BasicType;
+using MirStringType = StringType;
+using MirArrayType = ArrayType;
+using MirFunctionType = FunctionType;
+using MirNoneType = NoneType;
 
-struct MirRef {
-    MirType type;
+struct MirVar {
+    std::shared_ptr<MirType> type;
     bool is_temp;
     std::string name;
 };
 
 enum class MirOp {
-    Add, Sub, Mul, Div,
+    IAdd, ISub, IMul, IDiv, IMod, IPow,
+    FAdd, FSub, FMul, FDiv, FMod, FPow,
     Le, Lt, Ge, Gt, Eq, Ne,
-    And, Or
+    And, Or,
+    IfTrue, IfFalse, Goto,
+
+    Call, Ret,
 };
 
 struct MirNode {
@@ -28,23 +39,42 @@ struct MirNode {
 };
 
 struct MirExpr : MirNode {
-    enum class Kind { Literal, Operate, Ref };
+    enum class Kind { Value, Operate };
     Kind kind;
-    MirType type;
+    runtime::ValueKind type;
 };
 
-struct MirLiteral : MirExpr {
+struct MirValue : MirExpr {
+    runtime::ValueKind type;
     std::string data;
 };
 
 struct MirOperate : MirExpr {
     MirOp op;
-    std::vector<MirRef> args;
+
+    explicit MirOperate(const MirOp op) noexcept : op(op) {}
+};
+#define decl_binary_op_node(name) \
+struct Mir##name##Op : MirOperate {\
+    std::shared_ptr<MirExpr> lhs,rhs;\
+    explicit  Mir##name##Op() noexcept : MirOperate(MirOp::name) {}\
 };
 
-struct MirRefExpr : MirExpr {
-    MirRef ref;
-};
+decl_binary_op_node(IAdd)
+decl_binary_op_node(ISub)
+decl_binary_op_node(IMul)
+decl_binary_op_node(IDiv)
+decl_binary_op_node(IMod)
+decl_binary_op_node(IPow)
+
+decl_binary_op_node(Le)
+decl_binary_op_node(Lt)
+decl_binary_op_node(Ge)
+decl_binary_op_node(Gt)
+decl_binary_op_node(Eq)
+decl_binary_op_node(Ne)
+decl_binary_op_node(And)
+decl_binary_op_node(Or)
 
 struct MirStmt : MirNode {
     enum class Kind { Expr, TmpAssign, Assign };
@@ -64,17 +94,21 @@ struct MirAssignStmt : MirStmt {
     std::string name;
     std::shared_ptr<MirExpr> expr;
 };
+struct MirFunctionStmt : MirStmt {
+    std::string name;
+    std::vector<std::shared_ptr<MirStmt>> body;
+    std::vector<std::pair<std::string, std::shared_ptr<MirType>>> args;
+};
 
 using MirProgram = std::vector<std::shared_ptr<MirStmt>>;
 
-std::string to_string(MirType type);
+std::string to_string(runtime::ValueKind type);
 std::string to_string(MirOp op);
-std::string to_string(const MirRef &ref);
 std::string to_string(const MirExpr &expr);
-std::string to_string(const MirLiteral &lit);
+std::string to_string(const MirValue &lit);
 std::string to_string(const MirOperate &op);
-std::string to_string(const MirRefExpr &ref);
 std::string to_string(const MirStmt &stmt);
 std::string to_string(const MirProgram &prog);
 
 }
+#undef decl_binary_op_node

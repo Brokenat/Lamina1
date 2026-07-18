@@ -69,7 +69,7 @@ static const void* dispatch[] = {\
     &&opIfTrue, &&opIfFalse,\
     &&opLGet, &&opLSet,\
     &&opGGet, &&opGSet,\
-    &&opFAddi, &&opFSUbi, &&opFMuli, &&opFDivi, &&opFModi, &&opFPow, &&opFNeg,\
+    &&opFAddi, &&opFSUbi, &&opFMuli, &&opFDivi, &&opFModi, &&opFNeg,\
 };\
 goto *dispatch[*ip];
 
@@ -130,13 +130,13 @@ int LaminaVM::run(Code *new_prog) noexcept {
     VM_LABEL(CConst) {
         switch (uint16_t idx = read_u16(ip + 2); cp[idx].id) {
             case ConstantId::Int:
-                regs[ip[1]] = Value(cp[idx].int_value);
+                new (&regs[ip[1]]) Value(cp[idx].int_value);
                 break;
             case ConstantId::Str:
-                regs[ip[1]] = Value(cp[idx].str);
+                new (&regs[ip[1]]) Value(cp[idx].str);
                 break;
             default:
-                regs[ip[1]] = Value();
+                new (&regs[ip[1]]) Value();
                 break;
         }
         VM_NEXT
@@ -306,13 +306,6 @@ int LaminaVM::run(Code *new_prog) noexcept {
 
     VM_LABEL(FModi) {
         regs[ip[1]] = regs[ip[2]] % regs[ip[3]];
-        VM_NEXT
-    }
-
-    VM_LABEL(FPow) {
-        int64_t a = regs[ip[2]].int_val;
-        int64_t b = regs[ip[3]].int_val;
-        regs[ip[1]] = Value(static_cast<int64_t>(std::pow(static_cast<double>(a), static_cast<double>(b))));
         VM_NEXT
     }
 

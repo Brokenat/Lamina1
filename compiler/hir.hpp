@@ -18,12 +18,16 @@ struct Scope {
         std::shared_ptr<Type> type;
         bool is_mut;
     };
+    enum class ScopeType {
+        Function, Block,
+    };
+    ScopeType scope{ScopeType::Function};
     std::string name;
     std::vector<Var> vars;
     std::shared_ptr<Type> return_type;
 
     explicit Scope(std::string name) noexcept;
-
+    explicit Scope(ScopeType scope) noexcept;
     explicit Scope() = default;
 };
 

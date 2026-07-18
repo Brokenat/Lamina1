@@ -44,6 +44,8 @@ LaminaVM* lmx_newLaminaVM(LmState* state, int argc, char** argv);
 
 int lmx_vmRunModule(LmState* state, LaminaVM* vm, LmModule* module);
 
+void lmx_vmEval(LmState* state, LaminaVM* vm, LmValue* result, const char* code);
+
 #if __cplusplus
 }
 #endif

@@ -21,10 +21,10 @@ std::string to_string(runtime::ValueKind type) {
 
 std::string to_string(MirOp op) {
     switch (op) {
-    case MirOp::Add: return "add";
-    case MirOp::Sub: return "sub";
-    case MirOp::Mul: return "mul";
-    case MirOp::Div: return "div";
+    case MirOp::IAdd: return "iadd";
+    case MirOp::ISub: return "isub";
+    case MirOp::IMul: return "imul";
+    case MirOp::IDiv: return "idiv";
     case MirOp::Le:  return "le";
     case MirOp::Lt:  return "lt";
     case MirOp::Ge:  return "ge";
@@ -39,7 +39,7 @@ std::string to_string(MirOp op) {
 
 std::string to_string(const MirExpr &expr) {
     switch (expr.kind) {
-        return to_string(static_cast<const MirValue &>(expr));
+        // return to_string(static_cast<const MirValue &>(expr));
     case MirExpr::Kind::Operate:
         return to_string(static_cast<const MirOperate &>(expr));
     case MirExpr::Kind::Value:

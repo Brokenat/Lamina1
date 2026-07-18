@@ -6,13 +6,21 @@ include_directories(include)
 add_subdirectory(runtime)
 add_subdirectory(compiler)
 
+option(LMX_BUILD_STATIC "Build laminac and lamina_runtime as standalone static libraries" OFF)
+
 add_library(laminaCore SHARED
         lamina_core.cpp
     $<TARGET_OBJECTS:laminac>
     $<TARGET_OBJECTS:lamina_runtime>
 )
 
-# 保持 laminac 作为独立静态库(供其他目标使用)
+if(LMX_BUILD_STATIC)
+    add_library(laminac_s STATIC $<TARGET_OBJECTS:laminac>)
+    add_library(lamina_runtime_s STATIC $<TARGET_OBJECTS:lamina_runtime>)
+    set_target_properties(laminac_s PROPERTIES OUTPUT_NAME laminac)
+    set_target_properties(lamina_runtime_s PROPERTIES OUTPUT_NAME lamina_runtime)
+endif()
+
 set_target_properties(laminac PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_executable(lamina main.cpp)
@@ -26,7 +34,11 @@ function(disable_exceptions_rtti target)
     )
 endfunction()
 
-foreach(tgt IN ITEMS laminac lamina_runtime laminaCore lamina)
+set(LMX_ALL_TARGETS laminac lamina_runtime laminaCore lamina)
+if(LMX_BUILD_STATIC)
+    list(APPEND LMX_ALL_TARGETS laminac_s lamina_runtime_s)
+endif()
+foreach(tgt IN ITEMS ${LMX_ALL_TARGETS})
     disable_exceptions_rtti(${tgt})
 endforeach()
 

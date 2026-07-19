@@ -9,7 +9,7 @@ add_subdirectory(compiler)
 option(LMX_BUILD_STATIC "Build laminac and lamina_runtime as standalone static libraries" OFF)
 
 add_library(laminaCore SHARED
-        lamina_core.cpp
+        lmx.cpp
     $<TARGET_OBJECTS:laminac>
     $<TARGET_OBJECTS:lamina_runtime>
 )

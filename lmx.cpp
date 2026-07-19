@@ -2,7 +2,7 @@
 // Created by meian on 2026/4/8.
 //
 
-#include "include/lamina_core.h"
+#include "include/lmx.h"
 
 
 #include "compiler/ast_printer.hpp"
@@ -54,4 +54,11 @@ LaminaVM* lmx_newLaminaVM(LmState* state, int argc, char** argv) {
     new (vm) lmx::runtime::LaminaVM(nullptr, argc, argv);
     lmx_state_addNode(state, vm);
     return vm;
+}
+
+void lmx_vmEval(LmState *state, LaminaVM *vm, LmValue *result, const char *code) {
+    std::string c = code;
+    auto tks = lmx::Lexer(c).tokenize(c);
+    const auto node = lmx::Parser(tks).parse_stmt();
+    lmx::hir::HirContext().check_stmt(node.get());
 }

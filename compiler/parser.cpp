@@ -33,6 +33,11 @@ static BinaryNode::Op token_to_binary_op(const TokenType type) {
 
 Parser::Parser(std::vector<Token> &tokens) noexcept : tokens(tokens) {}
 
+std::shared_ptr<StmtNode> Parser::parse_stmt(const std::vector<Token> &t) noexcept {
+    this->reset(t);
+    return parse_stmt();
+}
+
 #define advance() \
     do {\
     if (pos >= tokens.size()) return nullptr;\

@@ -2,12 +2,14 @@ name: Release
 
 on:
   push:
+    branches: [ "master" ]
     tags:
       - 'v*'
+  pull_request:
+    branches: [ "master" ]
   workflow_dispatch:
 
-permissions:
-  contents: write
+
 
 jobs:
   build:
@@ -72,8 +74,3 @@ jobs:
           name: lamina-${{ matrix.archive }}
           path: lamina-${{ matrix.archive }}.zip
 
-      - name: Upload Release Asset
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: lamina-${{ matrix.archive }}.zip

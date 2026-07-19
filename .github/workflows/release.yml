@@ -47,15 +47,16 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          mkdir -p package/bin package/lib
+          mkdir -p package/bin
 
           # Executable
           cp "$(find build -maxdepth 3 -name "lamina${{ matrix.ext }}" -type f | head -1)" package/bin/
 
-          # Shared library
-          cp "$(find build -maxdepth 3 -name "*laminaCore*${{ matrix.so_ext }}" -type f | head -1)" package/lib/
+          # Shared library (put alongside executable so it can be found)
+          cp "$(find build -maxdepth 3 -name "*laminaCore*${{ matrix.so_ext }}" -type f | head -1)" package/bin/
 
           # Static libraries
+          mkdir -p package/lib
           while IFS= read -r f; do
             cp "$f" package/lib/
           done < <(find build -maxdepth 3 \( -name "laminac${{ matrix.lib_ext }}" -o -name "lamina_runtime${{ matrix.lib_ext }}" \) -type f)
@@ -65,12 +66,9 @@ jobs:
             cp "$(find build -maxdepth 3 -name "laminaCore.lib" -type f | head -1)" package/lib/
           fi
 
-          cd package
-          zip -r "../lamina-${{ matrix.archive }}.zip" .
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: lamina-${{ matrix.archive }}
-          path: lamina-${{ matrix.archive }}.zip
+          path: package/
 

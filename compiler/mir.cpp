@@ -11,13 +11,21 @@ namespace lmx::mir {
 
 MirNode::MirNode(const MirNodeKind kind) noexcept : kind(kind) {}
 MirExpr::MirExpr(const MirExprKind kind) noexcept : kind(kind) {}
-MirLiteralExpr::MirLiteralExpr() noexcept : MirExpr(MirExprKind::Literal) {}
-MirRefExpr::MirRefExpr() noexcept : MirExpr(MirExprKind::Ref) {}
-MirTempAssign::MirTempAssign() noexcept : MirNode(MirNodeKind::TempAssign) {}
-MirExprNode::MirExprNode(std::shared_ptr<MirExpr> expr) noexcept : MirNode(MirNodeKind::Expr), expr(std::move(expr)) {}
-MirAssign::MirAssign() noexcept : MirNode(MirNodeKind::Assign) {}
+MirLiteralExpr::MirLiteralExpr(MirLiteralKind kind, std::string data) noexcept
+    : MirExpr(MirExprKind::Literal), literal_kind(kind), data(std::move(data)) {}
 
-MirOperateExpr::MirOperateExpr(const runtime::Opcode::Opcode opcode) noexcept : MirExpr(MirExprKind::Operate), opcode(opcode) {}
+MirRefExpr::MirRefExpr(std::string name, bool is_temp) noexcept : MirExpr(MirExprKind::Ref), name(std::move(name)), is_temp(is_temp) {}
+MirTempAssign::MirTempAssign(std::string name, std::shared_ptr<MirExpr> expr) noexcept
+    : MirNode(MirNodeKind::TempAssign), name(std::move(name)), expr(std::move(expr)) {}
+MirExprNode::MirExprNode(std::shared_ptr<MirExpr> expr) noexcept : MirNode(MirNodeKind::Expr), expr(std::move(expr)) {}
+MirAssign::MirAssign(std::string name, std::shared_ptr<MirExpr> expr) noexcept
+    : MirNode(MirNodeKind::Assign), name(std::move(name)), expr(std::move(expr)) {}
+
+MirFuncDefine::MirFuncDefine(std::string name, std::vector<std::string> params, std::vector<std::shared_ptr<MirNode> > body) noexcept :
+    MirNode(MirNodeKind::Func), name(std::move(name)), params(std::move(params)), body(std::move(body)) {}
+
+MirOperateExpr::MirOperateExpr(const runtime::Opcode::Opcode opcode, MirOperateKind kind) noexcept
+    : MirExpr(MirExprKind::Operate), opcode(opcode), operate_kind(kind) {}
 
 MirNopExpr::MirNopExpr() noexcept : MirOperateExpr(runtime::Opcode::Opcode::Nop) {}
 
@@ -50,10 +58,13 @@ MirINegExpr::MirINegExpr(std::shared_ptr<MirExpr> e) noexcept
 MirCallVirtualExpr::MirCallVirtualExpr(uint8_t reg, uint8_t arg_count) noexcept
     : MirOperateExpr(runtime::Opcode::Opcode::CallVirtual), reg(reg), arg_count(arg_count) {}
 
-MirCallFastExpr::MirCallFastExpr(uint16_t constant_tag_idx, uint8_t arg_count) noexcept
-    : MirOperateExpr(runtime::Opcode::Opcode::CallFast), constant_tag_idx(constant_tag_idx), arg_count(arg_count) {}
+MirCallFastExpr::MirCallFastExpr(std::string name, std::vector<std::shared_ptr<MirRefExpr>> args) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::CallFast), name(std::move(name)), args(std::move(args)) {}
 
-MirRetExpr::MirRetExpr() noexcept : MirOperateExpr(runtime::Opcode::Opcode::Ret) {}
+MirRetExpr::MirRetExpr(std::shared_ptr<MirExpr> value) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::Ret), value(std::move(value)) {}
+MirRetVoidExpr::MirRetVoidExpr() noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::Nop, MirOperateKind::RetVoid) {}
 
 MirGotoExpr::MirGotoExpr(std::string label) noexcept
     : MirOperateExpr(runtime::Opcode::Opcode::Goto), label(std::move(label)) {}

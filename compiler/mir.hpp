@@ -16,7 +16,7 @@ enum Opcode : uint8_t;
 namespace lmx::mir {
 
 enum class MirNodeKind {
-    TempAssign, Assign, Label, Expr
+    TempAssign, Assign, Label, Expr, Func
 };
 struct MirNode {
     MirNodeKind kind;
@@ -30,12 +30,18 @@ struct MirExpr {
     MirExprKind kind;
     explicit MirExpr(MirExprKind kind) noexcept;
 };
+enum class MirLiteralKind {
+    Integer, Float, String, Boolean,
+};
+
 struct MirLiteralExpr : MirExpr {
-    explicit MirLiteralExpr() noexcept;
+    MirLiteralKind literal_kind;
     std::string data;
+
+    explicit MirLiteralExpr(MirLiteralKind kind, std::string data) noexcept;
 };
 struct MirRefExpr : MirExpr {
-    explicit MirRefExpr() noexcept;
+    explicit MirRefExpr(std::string name, bool is_temp) noexcept;
     std::string name;
     bool is_temp;
 };
@@ -43,21 +49,33 @@ struct MirLabel : MirNode {
     std::string name;
     explicit MirLabel(std::string name) noexcept;
 };
+struct MirFuncDefine : MirNode {
+    std::string name;
+    std::vector<std::string> params;
+    std::vector<std::shared_ptr<MirNode>> body;
+
+    explicit MirFuncDefine(std::string name, std::vector<std::string> params,  std::vector<std::shared_ptr<MirNode>> body) noexcept;
+};
 
 struct MirTempAssign : MirNode {
     std::string name;
     std::shared_ptr<MirExpr> expr;
-    explicit MirTempAssign() noexcept;
+    explicit MirTempAssign(std::string name, std::shared_ptr<MirExpr> expr) noexcept;
 };
 
 struct MirExprNode : MirNode {
     std::shared_ptr<MirExpr> expr;
     explicit MirExprNode(std::shared_ptr<MirExpr> expr) noexcept;
 };
+enum class MirOperateKind {
+    Normal, RetVoid,
+};
+
 struct MirOperateExpr : MirExpr {
     runtime::Opcode::Opcode opcode;
+    MirOperateKind operate_kind;
 
-    explicit MirOperateExpr(runtime::Opcode::Opcode opcode) noexcept;
+    explicit MirOperateExpr(runtime::Opcode::Opcode opcode, MirOperateKind kind = MirOperateKind::Normal) noexcept;
 };
 
 struct MirNopExpr : MirOperateExpr {
@@ -108,12 +126,16 @@ struct MirCallVirtualExpr : MirOperateExpr {
     explicit MirCallVirtualExpr(uint8_t reg, uint8_t arg_count) noexcept;
 };
 struct MirCallFastExpr : MirOperateExpr {
-    uint16_t constant_tag_idx;
-    uint8_t arg_count;
-    explicit MirCallFastExpr(uint16_t constant_tag_idx, uint8_t arg_count) noexcept;
+    std::string name;
+    std::vector<std::shared_ptr<MirRefExpr>> args;
+    explicit MirCallFastExpr(std::string name, std::vector<std::shared_ptr<MirRefExpr>> args) noexcept;
 };
 struct MirRetExpr : MirOperateExpr {
-    explicit MirRetExpr() noexcept;
+    std::shared_ptr<MirExpr> value;
+    explicit MirRetExpr(std::shared_ptr<MirExpr> value) noexcept;
+};
+struct MirRetVoidExpr : MirOperateExpr {
+    explicit MirRetVoidExpr() noexcept;
 };
 struct MirGotoExpr : MirOperateExpr {
     std::string label;
@@ -181,7 +203,7 @@ struct MirFNegExpr : MirOperateExpr {
 struct MirAssign : MirNode {
     std::string name;
     std::shared_ptr<MirExpr> expr;
-    explicit MirAssign() noexcept;
+    explicit MirAssign(std::string name, std::shared_ptr<MirExpr> expr) noexcept;
 };
 struct MirModule {
     std::vector<std::shared_ptr<MirNode>> nodes;

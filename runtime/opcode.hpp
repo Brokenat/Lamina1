@@ -26,7 +26,7 @@ enum Opcode : uint8_t {
     CallVirtual, // reg(1) arg_count(1)
     CCall,
     CallFast,    // constant_tag_idx(2) arg_count(1)
-    Ret,    //
+    Ret,    // reg(1)
     Goto,   // ip+(2)
     ICmpEq, ICmpNe, ICmpLt, ICmpLe, ICmpGt, ICmpGe,  // reg(1) reg(1) reg(1)
     IfTrue, IfFalse, // then ip+(2)

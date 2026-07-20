@@ -44,6 +44,8 @@ struct Type {
     static bool is_null_type(const Type* kind) noexcept {
         return !kind || kind->kind == TypeKind::Unknown;
     }
+
+    static std::string to_string(const Type* kind) noexcept;
 };
 
 struct UnknownType : Type {
@@ -188,6 +190,8 @@ struct BinaryNode : ExprNode {
 
     explicit BinaryNode(size_t line, size_t col, std::shared_ptr<ExprNode> lhs, Op op,
                         std::shared_ptr<ExprNode> rhs) noexcept;
+
+    static std::string op_to_string(Op op) noexcept;
 };
 
 struct ReturnNode : StmtNode {

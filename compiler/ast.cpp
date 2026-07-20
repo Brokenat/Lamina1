@@ -5,7 +5,10 @@
 #include "ast.hpp"
 #include "ast.hpp"
 #include <ranges>
+#include <sstream>
 #include <utility>
+
+#include "ast_printer.hpp"
 
 using namespace lmx;
 
@@ -63,6 +66,49 @@ bool NoneType::equals(Type *other) const noexcept {
     if (!other) return true;
     if (other->kind != this->kind) return false;
     return true;
+}
+
+std::string Type::to_string(const Type* kind) noexcept {
+    std::ostringstream ss;
+    AstPrinter::print_type(ss, *kind);
+    return ss.str();
+}
+
+std::string BinaryNode::op_to_string(const Op op) noexcept {
+    switch (op) {
+    case Op::Add:
+        return "+";
+    case Op::Sub:
+        return "-";
+    case Op::Mul:
+        return "*";
+    case Op::Div:
+        return "/";
+    case Op::Mod:
+        return "%";
+    case Op::Pow:
+        return "^";
+    case Op::Gt:
+        return ">";
+    case Op::Ge:
+        return ">=";
+    case Op::Lt:
+        return "<";
+    case Op::Le:
+        return "<=";
+    case Op::Eq:
+        return "==";
+    case Op::Ne:
+        return "!=";
+    case Op::And:
+        return "and";
+    case Op::Or:
+        return "or";
+    case Op::Dot:
+        return {};
+        break;
+    }
+    return {};
 }
 
 ASTNode::ASTNode(const ASTKind kind, const size_t line, const size_t col) noexcept

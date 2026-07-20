@@ -167,7 +167,11 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         node->lhs->type = lty;
         node->rhs->type = rty;
         if (!lty->equals(rty.get())) {
-            throw_error(ErrorType::Analysis, "binary operation type mismatch", expr->line, expr->col);
+            throw_error(
+                ErrorType::Analysis,
+                "binary operation type mismatch, (" +
+                Type::to_string(lty.get()) + " " +
+                BinaryNode::op_to_string(node->op) + " " + Type::to_string(rty.get()) + ")", expr->line, expr->col);
             break;
         }
         if (lty->kind != TypeKind::Basic) goto binary_type_mismatch;
@@ -261,7 +265,7 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         check_expr(node->expr.get());
         const auto left = inference_type(node->expr.get());
         if (left->kind != TypeKind::Array) {
-            throw_error(ErrorType::Analysis, "must be array type", node->line, node->col);
+            throw_error(ErrorType::Analysis, "must be array type but got `" + Type::to_string(left.get()) + "`", node->line, node->col);
             break;
         }
         node->type = std::reinterpret_pointer_cast<ArrayType>(left)->type;
@@ -272,7 +276,7 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         check_expr(node->cond.get());
         if (node->cond->type->kind != TypeKind::Basic &&
             std::reinterpret_pointer_cast<BasicType>(node->cond->type)->type != runtime::ValueKind::Bool) {
-            throw_error(ErrorType::Analysis, "if expression condition must return bool type", node->line, node->col);
+            throw_error(ErrorType::Analysis, "must be bool type but got `" + Type::to_string(node->cond->type.get()), node->line, node->col);
         }
         check_expr(node->then.get());
         if (node->els) {

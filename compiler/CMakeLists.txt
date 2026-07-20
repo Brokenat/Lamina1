@@ -8,4 +8,10 @@ add_library(laminac
         hir.hpp
         mir.cpp
         mir.hpp
+        mir_builder.cpp
+        mir_builder.hpp
+        mir_printer.cpp
+        mir_printer.hpp
+        assembler.cpp
+        assembler.hpp
 )

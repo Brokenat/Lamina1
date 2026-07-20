@@ -3,93 +3,104 @@
 //
 
 #include "mir.hpp"
-#include <sstream>
+#include <utility>
+
+#include "../runtime/opcode.hpp"
 
 namespace lmx::mir {
 
-std::string to_string(runtime::ValueKind type) {
-    switch (type) {
-    case runtime::ValueKind::Int:    return "int";
-    case runtime::ValueKind::Fraction:   return "frac";
-    case runtime::ValueKind::Bool:   return "bool";
-    case runtime::ValueKind::Obj: return "obj";
-    case runtime::ValueKind::Null: return "null";
-    case runtime::ValueKind::C_Ptr:  return "c_ptr";
-    }
-    return "?";
-}
+MirNode::MirNode(const MirNodeKind kind) noexcept : kind(kind) {}
+MirExpr::MirExpr(const MirExprKind kind) noexcept : kind(kind) {}
+MirLiteralExpr::MirLiteralExpr() noexcept : MirExpr(MirExprKind::Literal) {}
+MirRefExpr::MirRefExpr() noexcept : MirExpr(MirExprKind::Ref) {}
+MirTempAssign::MirTempAssign() noexcept : MirNode(MirNodeKind::TempAssign) {}
+MirExprNode::MirExprNode(std::shared_ptr<MirExpr> expr) noexcept : MirNode(MirNodeKind::Expr), expr(std::move(expr)) {}
+MirAssign::MirAssign() noexcept : MirNode(MirNodeKind::Assign) {}
 
-std::string to_string(MirOp op) {
-    switch (op) {
-    case MirOp::IAdd: return "iadd";
-    case MirOp::ISub: return "isub";
-    case MirOp::IMul: return "imul";
-    case MirOp::IDiv: return "idiv";
-    case MirOp::Le:  return "le";
-    case MirOp::Lt:  return "lt";
-    case MirOp::Ge:  return "ge";
-    case MirOp::Gt:  return "gt";
-    case MirOp::Eq:  return "eq";
-    case MirOp::Ne:  return "ne";
-    case MirOp::And: return "and";
-    case MirOp::Or:  return "or";
-    }
-    return "?";
-}
+MirOperateExpr::MirOperateExpr(const runtime::Opcode::Opcode opcode) noexcept : MirExpr(MirExprKind::Operate), opcode(opcode) {}
 
-std::string to_string(const MirExpr &expr) {
-    switch (expr.kind) {
-        // return to_string(static_cast<const MirValue &>(expr));
-    case MirExpr::Kind::Operate:
-        return to_string(static_cast<const MirOperate &>(expr));
-    case MirExpr::Kind::Value:
-        break;
-    }
-    return "?";
-}
+MirNopExpr::MirNopExpr() noexcept : MirOperateExpr(runtime::Opcode::Opcode::Nop) {}
 
-std::string to_string(const MirValue &lit) {
-    return to_string(lit.type) + " " + lit.data;
-}
+MirNewExpr::MirNewExpr(std::shared_ptr<MirExpr> expr) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::New), expr(std::move(expr)) {}
 
-std::string to_string(const MirOperate &op) {
-    std::ostringstream os;
-    os << to_string(op.type) << " " << to_string(op.op);
-    // for (const auto &arg : op.args) {
-    //     os << " " << to_string(arg);
-    // }
-    return os.str();
-}
+MirHaltExpr::MirHaltExpr() noexcept : MirOperateExpr(runtime::Opcode::Opcode::Halt) {}
 
+MirIAddExpr::MirIAddExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+   : MirOperateExpr(runtime::Opcode::Opcode::IAdd), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-std::string to_string(const MirStmt &stmt) {
-    std::ostringstream os;
-    switch (stmt.kind) {
-    case MirStmt::Kind::Expr: {
-        auto &s = static_cast<const MirExprStmt &>(stmt);
-        os << to_string(*s.expr);
-        break;
-    }
-    case MirStmt::Kind::TmpAssign: {
-        auto &s = static_cast<const MirTmpAssignStmt &>(stmt);
-        os << "%" << s.name << " = " << to_string(*s.expr);
-        break;
-    }
-    case MirStmt::Kind::Assign: {
-        auto &s = static_cast<const MirAssignStmt &>(stmt);
-        os << "$" << s.name << " = " << to_string(*s.expr) << ";";
-        break;
-    }
-    }
-    return os.str();
-}
+MirISubExpr::MirISubExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+   : MirOperateExpr(runtime::Opcode::Opcode::ISub), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-std::string to_string(const MirProgram &prog) {
-    std::ostringstream os;
-    for (const auto &stmt : prog) {
-        os << to_string(*stmt) << "\n";
-    }
-    return os.str();
-}
+MirIMulExpr::MirIMulExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+   : MirOperateExpr(runtime::Opcode::Opcode::IMul), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirIDivExpr::MirIDivExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::IDiv), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirIModExpr::MirIModExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+   : MirOperateExpr(runtime::Opcode::Opcode::IMod), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirIPowExpr::MirIPowExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::IPow), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirINegExpr::MirINegExpr(std::shared_ptr<MirExpr> e) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::INeg), e(std::move(e)) {}
+
+MirCallVirtualExpr::MirCallVirtualExpr(uint8_t reg, uint8_t arg_count) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::CallVirtual), reg(reg), arg_count(arg_count) {}
+
+MirCallFastExpr::MirCallFastExpr(uint16_t constant_tag_idx, uint8_t arg_count) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::CallFast), constant_tag_idx(constant_tag_idx), arg_count(arg_count) {}
+
+MirRetExpr::MirRetExpr() noexcept : MirOperateExpr(runtime::Opcode::Opcode::Ret) {}
+
+MirGotoExpr::MirGotoExpr(std::string label) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::Goto), label(std::move(label)) {}
+
+MirICmpEqExpr::MirICmpEqExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::ICmpEq), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirICmpNeExpr::MirICmpNeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::ICmpNe), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirICmpLtExpr::MirICmpLtExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::ICmpLt), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirICmpLeExpr::MirICmpLeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::ICmpLe), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirICmpGtExpr::MirICmpGtExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::ICmpGt), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirICmpGeExpr::MirICmpGeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::ICmpGe), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirLabel::MirLabel(std::string name) noexcept
+    : MirNode(MirNodeKind::Label), name(std::move(name)) {}
+
+MirIfTrueExpr::MirIfTrueExpr(std::shared_ptr<MirExpr> cond, std::string label) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::IfTrue), cond(std::move(cond)), label(std::move(label)) {}
+
+MirIfFalseExpr::MirIfFalseExpr(std::shared_ptr<MirExpr> cond, std::string label) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::IfFalse), cond(std::move(cond)), label(std::move(label)) {}
+
+MirFAddExpr::MirFAddExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FAdd), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirFSubExpr::MirFSubExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FSub), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirFMulExpr::MirFMulExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FMul), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirFDivExpr::MirFDivExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FDiv), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirFModiExpr::MirFModiExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FModi), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+MirFNegExpr::MirFNegExpr(std::shared_ptr<MirExpr> e) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FNeg), e(std::move(e)) {}
 
 }

@@ -3,7 +3,7 @@
 //
 
 #include "vm.hpp"
-
+#include "object/fraction.hpp"
 #include "opcode.hpp"
 #include <cmath>
 
@@ -69,7 +69,7 @@ static const void* dispatch[] = {\
     &&opIfTrue, &&opIfFalse,\
     &&opLGet, &&opLSet,\
     &&opGGet, &&opGSet,\
-    &&opFAddi, &&opFSUbi, &&opFMuli, &&opFDivi, &&opFModi, &&opFNeg,\
+    &&opFAdd, &&opFSub, &&opFMul, &&opFDiv, &&opFModi, &&opFNeg,\
 };\
 goto *dispatch[*ip];
 
@@ -167,7 +167,7 @@ int LaminaVM::run(Code *new_prog) noexcept {
     }
 
     VM_LABEL(IDiv) {
-        regs[ip[1]] = regs[ip[2]] / regs[ip[3]];
+        new (&regs[ip[1]]) Value (regs[ip[2]].int_val, regs[ip[3]].int_val);
         VM_NEXT
     }
 
@@ -284,33 +284,33 @@ int LaminaVM::run(Code *new_prog) noexcept {
         VM_NEXT
     }
 
-    VM_LABEL(FAddi) {
-        regs[ip[1]] = regs[ip[2]] + regs[ip[3]];
+    VM_LABEL(FAdd) {
+        regs[ip[1]].frac_val = regs[ip[2]].frac_val + regs[ip[3]].frac_val;
         VM_NEXT
     }
 
-    VM_LABEL(FSUbi) {
-        regs[ip[1]] = regs[ip[2]] - regs[ip[3]];
+    VM_LABEL(FSub) {
+        regs[ip[1]].frac_val = regs[ip[2]].frac_val - regs[ip[3]].frac_val;
         VM_NEXT
     }
 
-    VM_LABEL(FMuli) {
-        regs[ip[1]] = regs[ip[2]] * regs[ip[3]];
+    VM_LABEL(FMul) {
+        regs[ip[1]].frac_val = regs[ip[2]].frac_val * regs[ip[3]].frac_val;
         VM_NEXT
     }
 
-    VM_LABEL(FDivi) {
-        regs[ip[1]] = regs[ip[2]] / regs[ip[3]];
+    VM_LABEL(FDiv) {
+        regs[ip[1]].frac_val = regs[ip[2]].frac_val / regs[ip[3]].frac_val;
         VM_NEXT
     }
 
     VM_LABEL(FModi) {
-        regs[ip[1]] = regs[ip[2]] % regs[ip[3]];
+        regs[ip[1]] = regs[ip[2]].frac_val % regs[ip[3]].int_val;
         VM_NEXT
     }
 
     VM_LABEL(FNeg) {
-        regs[ip[1]] = -regs[ip[2]];
+        regs[ip[1]].frac_val = -regs[ip[2]].frac_val;
         VM_NEXT
     }
 

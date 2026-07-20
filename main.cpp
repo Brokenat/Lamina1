@@ -1,24 +1,31 @@
 //
 // Created by meian on 2026/4/8.
 //
+#include <cstdio>
 #include <string>
 
-#include "lmx.h"
+#include "compiler/ast_printer.hpp"
+#include "compiler/hir.hpp"
+#include "compiler/lexer.hpp"
+#include "compiler/parser.hpp"
+#include "compiler/mir_builder.hpp"
+#include "compiler/mir_printer.hpp"
 
 int main(const int argc, char** argv) {
-    constexpr auto code = R"(
-func foo(a bool, b bool) {
-    var c = false
-    c = true
-    a and b and c
+    auto code = std::string(R"(
+func add(a int, b int) {
+    a + b * 2
 }
-let v = foo(false, true)
-)";
-    auto state = lmx_newState();
+let v = add(1, 2)
+)");
+    auto tokens = lmx::Lexer(code).tokenize(code);
+    auto ast = lmx::Parser(tokens).parse_module("test");
+    lmx::hir::HirContext().check_module(ast.get());
 
-    lmx_printASTFromString(&state, stdout, code, "test");
+    std::printf("=== AST ===\n%s\n", lmx::AstPrinter::print(*ast).c_str());
 
-    auto vm = lmx_newLaminaVM(&state, argc, argv);
-    lmx_deleteState(&state);
+    auto mir = lmx::mir::MirBuilder::from_ast_module(ast);
 
+    std::printf("=== MIR ===\n%s", lmx::mir::MirPrinter::print(mir).c_str());
+    std::printf("=== done ===\n");
 }

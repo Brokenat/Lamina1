@@ -9,106 +9,181 @@
 
 #include "ast.hpp"
 
+namespace lmx::runtime::Opcode {
+enum Opcode : uint8_t;
+}
+
 namespace lmx::mir {
 
-using MirType = Type;
-using MirBasicType = BasicType;
-using MirStringType = StringType;
-using MirArrayType = ArrayType;
-using MirFunctionType = FunctionType;
-using MirNoneType = NoneType;
-
-struct MirVar {
-    std::shared_ptr<MirType> type;
-    bool is_temp;
-    std::string name;
+enum class MirNodeKind {
+    TempAssign, Assign, Label, Expr
 };
-
-enum class MirOp {
-    IAdd, ISub, IMul, IDiv, IMod, IPow,
-    FAdd, FSub, FMul, FDiv, FMod, FPow,
-    Le, Lt, Ge, Gt, Eq, Ne,
-    And, Or,
-    IfTrue, IfFalse, Goto,
-
-    Call, Ret,
-};
-
 struct MirNode {
-    virtual ~MirNode() = default;
-};
+    MirNodeKind kind;
 
-struct MirExpr : MirNode {
-    enum class Kind { Value, Operate };
-    Kind kind;
-    runtime::ValueKind type;
+    explicit MirNode(MirNodeKind kind) noexcept;
 };
-
-struct MirValue : MirExpr {
-    runtime::ValueKind type;
+enum class MirExprKind {
+    Ref, Literal, Operate,
+};
+struct MirExpr {
+    MirExprKind kind;
+    explicit MirExpr(MirExprKind kind) noexcept;
+};
+struct MirLiteralExpr : MirExpr {
+    explicit MirLiteralExpr() noexcept;
     std::string data;
 };
-
-struct MirOperate : MirExpr {
-    MirOp op;
-
-    explicit MirOperate(const MirOp op) noexcept : op(op) {}
+struct MirRefExpr : MirExpr {
+    explicit MirRefExpr() noexcept;
+    std::string name;
+    bool is_temp;
 };
-#define decl_binary_op_node(name) \
-struct Mir##name##Op : MirOperate {\
-    std::shared_ptr<MirExpr> lhs,rhs;\
-    explicit  Mir##name##Op() noexcept : MirOperate(MirOp::name) {}\
+struct MirLabel : MirNode {
+    std::string name;
+    explicit MirLabel(std::string name) noexcept;
 };
 
-decl_binary_op_node(IAdd)
-decl_binary_op_node(ISub)
-decl_binary_op_node(IMul)
-decl_binary_op_node(IDiv)
-decl_binary_op_node(IMod)
-decl_binary_op_node(IPow)
-
-decl_binary_op_node(Le)
-decl_binary_op_node(Lt)
-decl_binary_op_node(Ge)
-decl_binary_op_node(Gt)
-decl_binary_op_node(Eq)
-decl_binary_op_node(Ne)
-decl_binary_op_node(And)
-decl_binary_op_node(Or)
-
-struct MirStmt : MirNode {
-    enum class Kind { Expr, TmpAssign, Assign };
-    Kind kind;
-};
-
-struct MirExprStmt : MirStmt {
-    std::shared_ptr<MirExpr> expr;
-};
-
-struct MirTmpAssignStmt : MirStmt {
+struct MirTempAssign : MirNode {
     std::string name;
     std::shared_ptr<MirExpr> expr;
+    explicit MirTempAssign() noexcept;
 };
 
-struct MirAssignStmt : MirStmt {
+struct MirExprNode : MirNode {
+    std::shared_ptr<MirExpr> expr;
+    explicit MirExprNode(std::shared_ptr<MirExpr> expr) noexcept;
+};
+struct MirOperateExpr : MirExpr {
+    runtime::Opcode::Opcode opcode;
+
+    explicit MirOperateExpr(runtime::Opcode::Opcode opcode) noexcept;
+};
+
+struct MirNopExpr : MirOperateExpr {
+    explicit MirNopExpr() noexcept;
+};
+
+struct MirNewExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> expr;
+    explicit MirNewExpr(std::shared_ptr<MirExpr> expr) noexcept;
+};
+
+struct MirHaltExpr : MirOperateExpr {
+    explicit MirHaltExpr() noexcept;
+};
+
+struct MirIAddExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirIAddExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirISubExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirISubExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirIMulExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirIMulExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirIDivExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirIDivExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+
+struct MirIModExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirIModExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirIPowExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirIPowExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirINegExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> e;
+    explicit MirINegExpr(std::shared_ptr<MirExpr> e) noexcept;
+};
+struct MirCallVirtualExpr : MirOperateExpr {
+    uint8_t reg;
+    uint8_t arg_count;
+    explicit MirCallVirtualExpr(uint8_t reg, uint8_t arg_count) noexcept;
+};
+struct MirCallFastExpr : MirOperateExpr {
+    uint16_t constant_tag_idx;
+    uint8_t arg_count;
+    explicit MirCallFastExpr(uint16_t constant_tag_idx, uint8_t arg_count) noexcept;
+};
+struct MirRetExpr : MirOperateExpr {
+    explicit MirRetExpr() noexcept;
+};
+struct MirGotoExpr : MirOperateExpr {
+    std::string label;
+    explicit MirGotoExpr(std::string label) noexcept;
+};
+struct MirICmpEqExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirICmpEqExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirICmpNeExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirICmpNeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirICmpLtExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirICmpLtExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirICmpLeExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirICmpLeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirICmpGtExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirICmpGtExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirICmpGeExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirICmpGeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirIfTrueExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> cond;
+    std::string label;
+    explicit MirIfTrueExpr(std::shared_ptr<MirExpr> cond, std::string label) noexcept;
+};
+struct MirIfFalseExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> cond;
+    std::string label;
+    explicit MirIfFalseExpr(std::shared_ptr<MirExpr> cond, std::string label) noexcept;
+};
+struct MirFAddExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirFAddExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirFSubExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirFSubExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirFMulExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirFMulExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirFDivExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirFDivExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirFModiExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirFModiExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirFNegExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> e;
+    explicit MirFNegExpr(std::shared_ptr<MirExpr> e) noexcept;
+};
+
+struct MirAssign : MirNode {
     std::string name;
     std::shared_ptr<MirExpr> expr;
+    explicit MirAssign() noexcept;
 };
-struct MirFunctionStmt : MirStmt {
-    std::string name;
-    std::vector<std::shared_ptr<MirStmt>> body;
-    std::vector<std::pair<std::string, std::shared_ptr<MirType>>> args;
+struct MirModule {
+    std::vector<std::shared_ptr<MirNode>> nodes;
 };
-
-using MirProgram = std::vector<std::shared_ptr<MirStmt>>;
-
-std::string to_string(runtime::ValueKind type);
-std::string to_string(MirOp op);
-std::string to_string(const MirExpr &expr);
-std::string to_string(const MirValue &lit);
-std::string to_string(const MirOperate &op);
-std::string to_string(const MirStmt &stmt);
-std::string to_string(const MirProgram &prog);
-
 }
-#undef decl_binary_op_node

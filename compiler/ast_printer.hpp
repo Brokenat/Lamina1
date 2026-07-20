@@ -14,8 +14,6 @@ class AstPrinter {
 public:
     static std::string print(const ASTNode &node);
     static std::string print(const Module &module);
-
-private:
     static void print_node(std::ostringstream &ss, const ASTNode &node, const std::string &line_prefix, const std::string &child_prefix);
     static void print_expr(std::ostringstream &ss, const ExprNode &node, const std::string &line_prefix, const std::string &child_prefix);
     static void print_stmt(std::ostringstream &ss, const StmtNode &node, const std::string &line_prefix, const std::string &child_prefix);

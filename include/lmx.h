@@ -17,11 +17,9 @@
     #define LM_API __attribute__((visibility("default")))
 #endif
 
-#define LMX_VERSION     0x00000001
-#define LMX_MAGIC_NUM   0x4d4c5451
-const unsigned int lmx_magic = LMX_MAGIC_NUM;
-const unsigned int lmx_version = LMX_VERSION;
 
+#define LMX_VERSION     ((uint32_t)0x00000001)
+#define LMX_MAGIC_NUM   ((uint32_t)0x4d4c5451)
 #if __cplusplus
 
 extern "C" {
@@ -37,6 +35,8 @@ extern "C" {
 #else
 #define LM_CALL
 #endif
+
+
 
 struct LmLinkedNode {
     void* ptr;

@@ -23,15 +23,15 @@ enum Opcode : uint8_t {
 
     FuncCreate,     // reg(1) constant_tag_idx(2)
 
-    CallVirtual, // reg(1) arg_count(1)
-    CCall,
-    CallFast,    // constant_tag_idx(2) arg_count(1)
+    CallVirtual, //  reg(1) idx(1) arg_count(1)
+    CCall,       // reg(1)ptr type_cpidx(2)
+    CallFast,    // idx(2) arg_count(1)
     Ret,    // reg(1)
     Goto,   // ip+(2)
     ICmpEq, ICmpNe, ICmpLt, ICmpLe, ICmpGt, ICmpGe,  // reg(1) reg(1) reg(1)
-    IfTrue, IfFalse, // then ip+(2)
+    IfTrue, IfFalse, // reg(1) then ip+(2)
 
-    LGet, LSet, // idx(1)
+    LGet, LSet, // reg(1) idx(1)
     GGet, GSet, // idx(2)
     FAdd, FSub, FMul, FDiv, FMod, FNeg,
 

@@ -87,7 +87,7 @@ goto *dispatch[*ip];
 #define VM_NEXT_RAW break;
 #endif
 
-int LaminaVM::run(Code *new_prog) noexcept {
+int LaminaVM::run(CodeModule *new_prog) noexcept {
     this->prog = new_prog;
     this->ip = prog->code;
 
@@ -208,7 +208,7 @@ int LaminaVM::run(Code *new_prog) noexcept {
 
     VM_LABEL(FuncCreate) { // create lambda func
         uint16_t code_idx = read_u16(ip + 2);
-        regs[ip[1]] = new Code(code_idx, nullptr);
+        // regs[ip[1]] = new CodeModule(code_idx, nullptr);
         VM_NEXT
     }
 

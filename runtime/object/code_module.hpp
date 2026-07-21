@@ -6,16 +6,30 @@
 #include <cstdint>
 
 #include "object.hpp"
+#include "../binary.hpp"
 
 namespace lmx::runtime {
 
-class Code : public Object {
+class CodeModule : public Object {
+
 public:
-    uint16_t constant_id;
+    std::vector<ConstantPoolInfo> cp;
+    std::vector<TypeInfo> types;
+    std::vector<uint8_t*> funcs;
     uint8_t* code;
-
-    explicit Code(uint16_t constant_id, uint8_t* code) noexcept;
-
+    explicit CodeModule(
+        std::vector<ConstantPoolInfo> cp,
+        std::vector<TypeInfo> types,
+        std::vector<uint8_t*> funcs,
+        uint8_t* code
+        ) noexcept;
+    explicit CodeModule(
+        std::vector<ConstantPoolInfo>&& cp,
+        std::vector<TypeInfo>&& types,
+        std::vector<uint8_t*>&& funcs,
+        uint8_t* code
+        ) noexcept;
+    explicit CodeModule(uint8_t* binary) noexcept;
     [[nodiscard]] Object*       clone       () const noexcept override;
     [[nodiscard]] std::string   to_string   () const noexcept override;
     [[nodiscard]] std::string   type_info   () const noexcept override;
@@ -23,7 +37,6 @@ public:
 
     [[nodiscard]] bool operator==(const Object& other) const noexcept override;
     [[nodiscard]] bool operator!=(const Object& other) const noexcept override;
-
 };
 
 }

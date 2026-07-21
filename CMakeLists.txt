@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.31)
 project(Lamina LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -8,6 +8,18 @@ add_subdirectory(compiler)
 
 option(LMX_BUILD_STATIC "Build laminac and lamina_runtime as standalone static libraries" OFF)
 
+add_executable(lamina main.cpp)
+
+
+if (UNIX)
+    set_target_properties(lamina PROPERTIES
+            SKIP_BUILD_RPATH TRUE
+            INSTALL_RPATH "$ORIGIN"
+    )
+    target_link_options(lamina PRIVATE "-Wl,-rpath,$ORIGIN")
+endif ()
+
+message(STATUS "Your System is '${CMAKE_SYSTEM_NAME}'")
 add_library(laminaCore SHARED
         lmx.cpp
     $<TARGET_OBJECTS:laminac>
@@ -23,7 +35,7 @@ endif()
 
 set_target_properties(laminac PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-add_executable(lamina main.cpp)
+
 
 target_link_libraries(lamina PRIVATE laminaCore)
 
@@ -42,12 +54,14 @@ foreach(tgt IN ITEMS ${LMX_ALL_TARGETS})
     disable_exceptions_rtti(${tgt})
 endforeach()
 
+
 if(MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /arch:AVX2 /Oi /fp:fast")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
 else()
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -funroll-loops -ffast-math -flto -fomit-frame-pointer -Wl,--enable-new-dtags,-rpath,'$ORIGIN/../lib'")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -funroll-loops -ffast-math -flto -fomit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto -s")
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto -s")
+
 endif()

@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 namespace lmx::runtime {
-class Code;
+class CodeModule;
 
 namespace ObjectKind {
 enum ObjectKind {
@@ -20,7 +20,7 @@ enum ObjectKind {
 }
 class Object {
     uint32_t kind { ObjectKind::Object };
-    std::unordered_map<size_t, Code*>* sub_funcs;
+    std::unordered_map<size_t, CodeModule*>* sub_funcs;
 public:
     explicit Object(uint32_t kind) noexcept;
     virtual ~Object() noexcept;

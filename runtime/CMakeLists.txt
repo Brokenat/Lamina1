@@ -10,8 +10,8 @@ add_library(lamina_runtime
     object/object.cpp
     object/value.cpp
     object/value.hpp
-    object/code.cpp
-    object/code.hpp
+        object/code_module.cpp
+        object/code_module.hpp
     gc.cpp
     gc.hpp
 )

@@ -32,6 +32,10 @@ struct ConstantPoolInfo {
         FracInfo* frac_info;
         StringInfo* str;
     };
+
+    explicit ConstantPoolInfo(decltype(int_value) int_value) noexcept;
+    explicit ConstantPoolInfo(decltype(frac_info) frac_info) noexcept;
+    explicit ConstantPoolInfo(decltype(str) str) noexcept;
 };
 
 

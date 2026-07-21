@@ -9,7 +9,7 @@
 
 #include "binary.hpp"
 #include "gc.hpp"
-#include "object/code.hpp"
+#include "object/code_module.hpp"
 #include "object/value.hpp"
 
 namespace lmx::runtime {
@@ -30,7 +30,7 @@ class LaminaVM {
     Value regs[LMX_VM_REG_COUNT];
     ConstantPoolInfo* cp;
     Value* stack;
-    Code* prog          {nullptr};
+    CodeModule* prog          {nullptr};
     uint8_t* ip         {nullptr};
     Value* local_vars_bp;
     Value* local_vars_curp;
@@ -47,7 +47,7 @@ public:
     explicit LaminaVM() noexcept = delete;
     explicit LaminaVM(ConstantPoolInfo* cp, int argc, char** argv) noexcept;
     ~LaminaVM() noexcept;
-    int run(Code* prog) noexcept;
+    int run(CodeModule* prog) noexcept;
 };
 
 }

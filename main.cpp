@@ -13,7 +13,7 @@ func add(a int, b int) {
 let v = add(1, 2)
 )";
     auto state = lmx_newState();
-    lmx_printMIRFromString(&state, stdout, code.c_str(), "test");
+    lmx_printASTFromString(&state, stdout, code.c_str(), "test");
 
     lmx_deleteState(&state);
 }

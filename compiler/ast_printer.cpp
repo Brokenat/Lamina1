@@ -6,13 +6,13 @@
 namespace lmx {
 
 void AstPrinter::print_type(std::ostringstream &ss, const Type &type) {
-    if (&type) return;
+    if (!&type) return;
     switch (type.kind) {
     case TypeKind::Unknown:
         ss << "?";
         break;
     case TypeKind::None:
-        ss << "None";
+        ss << "none";
         break;
     case TypeKind::Basic: {
         auto &bt = static_cast<const BasicType &>(type);

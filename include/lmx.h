@@ -11,10 +11,11 @@
             #define LM_API __declspec(dllimport)
         #endif
     #else
-        #define LM_API
+        #define LM_API __attribute__((visibility("default")))
     #endif
 #else
-    #define LM_API __attribute__((visibility("default")))
+
+    #define LM_API
 #endif
 
 
@@ -27,7 +28,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 #if UINTPTR_MAX == INT32_MAX
-#if defined(MSC_VER)
+#if defined(_MSC_VER)
 #define LM_CALL __cdecl
 #else
 #define LM_CALL __attribute__((cdecl))

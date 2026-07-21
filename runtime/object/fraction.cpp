@@ -1,7 +1,6 @@
 #include "fraction.hpp"
 #include <cmath>
 #include <numeric>
-#include <sys/stat.h>
 
 using namespace lmx::runtime;
 

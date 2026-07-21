@@ -44,9 +44,15 @@ public:
             }
             case ConstantId::Str: {
                 using IdType = StringInfo;
+#if defined(_MSC_VER)
+                const auto len = *reinterpret_cast<uint32_t*>(p);
+                p += sizeof(uint32_t);
+                result.emplace_back(new StringInfo(len, p));
+#else
                 result.emplace_back(reinterpret_cast<IdType*>(p));
                 p += sizeof(IdType);
                 p += result.back().str->length;
+#endif
                 break;
             }
             }

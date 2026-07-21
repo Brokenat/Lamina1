@@ -71,6 +71,7 @@ static const void* dispatch[] = {\
     &&opLGet, &&opLSet,\
     &&opGGet, &&opGSet,\
     &&opFAdd, &&opFSub, &&opFMul, &&opFDiv, &&opFMod, &&opFNeg,\
+    &&opMovRR,\
 };\
 goto *dispatch[*ip];
 
@@ -328,6 +329,10 @@ int LaminaVM::run(Code *new_prog) noexcept {
 
     VM_LABEL(FNeg) {
         regs[ip[1]].frac_val = -regs[ip[2]].frac_val;
+        VM_NEXT
+    }
+    VM_LABEL(MovRR) {
+        regs[ip[1]] = regs[ip[2]];
         VM_NEXT
     }
 

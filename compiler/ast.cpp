@@ -125,11 +125,13 @@ StmtNode::StmtNode(const ASTKind kind, const size_t line, const size_t col) noex
 
 Module::Module(std::string name, decltype(decls) decls) noexcept
         : name(std::move(name)), decls(std::move(decls)) {
-    for (const auto& decl : decls) {
+    const auto decls_len = this->decls.size();
+    for (auto i = 0; i < decls_len; i++) {
+        const auto decl = this->decls[i];
         if (decl->kind == ASTKind::FuncImpl) {
-            auto node = *std::reinterpret_pointer_cast<FuncImplNode>(decl).get();
-            node.block = nullptr;
-            top_func_def.push_back(std::move(node));
+            // auto node = std::reinterpret_pointer_cast<FuncImplNode>(decl);
+            this->decls.erase(this->decls.begin() + i);
+            this->decls.insert(this->decls.begin(), decl);
         }
     }
 }

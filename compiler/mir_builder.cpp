@@ -201,9 +201,9 @@ public:
         for (auto &decl : ast_mod->decls) {
             process(decl.get());
         }
-        for (auto &func : ast_mod->top_func_def) {
-            process(&func);
-        }
+        // for (auto &func : ast_mod->top_func_def) {
+        //     process(&func);
+        // }
     }
 };
 

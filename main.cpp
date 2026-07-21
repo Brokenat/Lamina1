@@ -7,10 +7,12 @@
 
 int main(const int argc, char** argv) {
     const std::string code = R"(
+
+let v = add(1, 2)
+
 func add(a int, b int) {
     return a + b * 2
 }
-let v = add(1, 2)
 )";
     auto state = lmx_newState();
     lmx_printASTFromString(&state, stdout, code.c_str(), "test");

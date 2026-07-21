@@ -4,6 +4,7 @@
 
 #pragma once
 #include <cstdint>
+#include <vector>
 namespace lmx::runtime {
 
 constexpr uint32_t MAGIC_NUM = 0x434D4C00;
@@ -16,7 +17,7 @@ struct FracInfo {
 };
 struct StringInfo {
     uint32_t length;
-    char* str;
+    char str[];
 };
 enum class TypeTag : uint16_t {
     Func,
@@ -33,4 +34,8 @@ struct ConstantPoolInfo {
     };
 };
 
+
+struct BinaryModule {
+    std::vector<ConstantPoolInfo> constant_pool;
+};
 }

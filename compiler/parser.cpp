@@ -431,7 +431,7 @@ std::shared_ptr<Module> Parser::parse_module(const std::string &name) noexcept {
     cur_module_name = name;
     decltype(Module::decls) decls;
     while (pos < tokens.size() && tokens[pos].type != TokenType::END_OF_FILE) {
-        decls.push_back(parse_stmt());
+        decls.push_back(std::move(parse_stmt()));
     }
     cur_module_name = save_cur_mod;
     return std::make_shared<Module>(name, decls);

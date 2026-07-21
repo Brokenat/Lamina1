@@ -8,6 +8,7 @@
 #include <span>
 
 #include "binary.hpp"
+#include "gc.hpp"
 #include "object/code.hpp"
 #include "object/value.hpp"
 
@@ -36,6 +37,7 @@ class LaminaVM {
     Value* global_vars;
     std::vector<Frame*> free_frames;
     Frame* cur_frame;
+    LmGCAllocator allocator{};
 
     std::span<char*> args;
 

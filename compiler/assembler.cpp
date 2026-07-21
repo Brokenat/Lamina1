@@ -3,3 +3,10 @@
 //
 
 #include "assembler.hpp"
+
+
+namespace lmx {
+void InstEmitter::emit(runtime::Opcode::Opcode op, uint8_t a) noexcept {
+
+}
+}

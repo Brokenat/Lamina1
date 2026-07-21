@@ -6,6 +6,7 @@
 #include "object/fraction.hpp"
 #include "opcode.hpp"
 #include <cmath>
+#include <ranges>
 
 using namespace lmx::runtime;
 
@@ -103,7 +104,22 @@ int LaminaVM::run(Code *new_prog) noexcept {
     }
 
     VM_LABEL(New) {
-        regs[ip[1]] = Value();
+
+        switch (const auto c = cp[read_u16(ip + 2)]; c.id) {
+        case ConstantId::Int: {
+            regs[ip[1]] = c.int_value;
+            break;
+        }
+        case ConstantId::Frac: {
+            const auto frac = c.frac_info;
+            new (&regs[ip[1]]) Value(frac->num, frac->den);
+            break;
+        }
+        case ConstantId::Str: {
+            regs[ip[1]] = allocator.alloc_string(c.str->str);
+            break;
+        }
+        }
         VM_NEXT
     }
 
@@ -128,18 +144,19 @@ int LaminaVM::run(Code *new_prog) noexcept {
     }
 
     VM_LABEL(CConst) {
-        switch (uint16_t idx = read_u16(ip + 2); cp[idx].id) {
-            case ConstantId::Int:
-                new (&regs[ip[1]]) Value(cp[idx].int_value);
-                break;
-            case ConstantId::Str:
-                new (&regs[ip[1]]) Value(cp[idx].str);
-                break;
-            default:
-                new (&regs[ip[1]]) Value();
-                break;
-        }
-        VM_NEXT
+        // 抛弃
+        // switch (uint16_t idx = read_u16(ip + 2); cp[idx].id) {
+        //     case ConstantId::Int:
+        //         new (&regs[ip[1]]) Value(cp[idx].int_value);
+        //         break;
+        //     case ConstantId::Str:
+        //         new (&regs[ip[1]]) Value(cp[idx].str);
+        //         break;
+        //     default:
+        //         new (&regs[ip[1]]) Value();
+        //         break;
+        // }
+        // VM_NEXT
     }
 
     VM_LABEL(Pop) {
@@ -188,7 +205,7 @@ int LaminaVM::run(Code *new_prog) noexcept {
         VM_NEXT
     }
 
-    VM_LABEL(FuncCreate) {
+    VM_LABEL(FuncCreate) { // create lambda func
         uint16_t code_idx = read_u16(ip + 2);
         regs[ip[1]] = new Code(code_idx, nullptr);
         VM_NEXT

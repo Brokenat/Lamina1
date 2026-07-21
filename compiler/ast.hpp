@@ -121,7 +121,6 @@ struct FuncImplNode;
 struct Module {
     std::string name;
     std::vector<std::shared_ptr<StmtNode>> decls;
-    std::vector<FuncImplNode> top_func_def;
     Module(std::string name, decltype(decls) decls) noexcept;
 };
 struct ExprStmtNode : StmtNode {

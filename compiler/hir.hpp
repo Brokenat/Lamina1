@@ -42,7 +42,7 @@ class HirContext {
     void new_cur_scope_var(std::string name, std::shared_ptr<Type> type, bool is_mut = false) noexcept;
     void new_global_var(std::string name, std::shared_ptr<Type> type, bool is_mut = false) noexcept;
 
-    bool is_global_scope() noexcept;
+    bool is_global_scope() const noexcept;
 public:
     explicit HirContext() noexcept;
     void check_module(const Module *mod) noexcept;

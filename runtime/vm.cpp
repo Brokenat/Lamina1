@@ -69,7 +69,7 @@ static const void* dispatch[] = {\
     &&opIfTrue, &&opIfFalse,\
     &&opLGet, &&opLSet,\
     &&opGGet, &&opGSet,\
-    &&opFAdd, &&opFSub, &&opFMul, &&opFDiv, &&opFModi, &&opFNeg,\
+    &&opFAdd, &&opFSub, &&opFMul, &&opFDiv, &&opFMod, &&opFNeg,\
 };\
 goto *dispatch[*ip];
 
@@ -108,17 +108,17 @@ int LaminaVM::run(Code *new_prog) noexcept {
     }
 
     VM_LABEL(GetTrue) {
-        regs[ip[1]] = Value(true);
+        regs[ip[1]] = true;
         VM_NEXT
     }
 
     VM_LABEL(GetFalse) {
-        regs[ip[1]] = Value(false);
+        regs[ip[1]] = false;
         VM_NEXT
     }
 
     VM_LABEL(GetNull) {
-        regs[ip[1]] = Value();
+        regs[ip[1]] = nullptr;
         VM_NEXT
     }
 
@@ -177,9 +177,9 @@ int LaminaVM::run(Code *new_prog) noexcept {
     }
 
     VM_LABEL(IPow) {
-        int64_t a = regs[ip[2]].int_val;
-        int64_t b = regs[ip[3]].int_val;
-        regs[ip[1]] = static_cast<int64_t>(std::pow(static_cast<double>(a), static_cast<double>(b)));
+        regs[ip[1]] = static_cast<int64_t>(std::pow(
+            regs[ip[2]].int_val, regs[ip[3]].int_val
+            ));
         VM_NEXT
     }
 
@@ -285,27 +285,27 @@ int LaminaVM::run(Code *new_prog) noexcept {
     }
 
     VM_LABEL(FAdd) {
-        regs[ip[1]].frac_val = regs[ip[2]].frac_val + regs[ip[3]].frac_val;
+        new (&regs[ip[1]]) Value(regs[ip[2]].frac_val + regs[ip[3]].frac_val);
         VM_NEXT
     }
 
     VM_LABEL(FSub) {
-        regs[ip[1]].frac_val = regs[ip[2]].frac_val - regs[ip[3]].frac_val;
+        new (&regs[ip[1]]) Value(regs[ip[2]].frac_val - regs[ip[3]].frac_val);
         VM_NEXT
     }
 
     VM_LABEL(FMul) {
-        regs[ip[1]].frac_val = regs[ip[2]].frac_val * regs[ip[3]].frac_val;
+        new (&regs[ip[1]]) Value(regs[ip[2]].frac_val * regs[ip[3]].frac_val);
         VM_NEXT
     }
 
     VM_LABEL(FDiv) {
-        regs[ip[1]].frac_val = regs[ip[2]].frac_val / regs[ip[3]].frac_val;
+        new (&regs[ip[1]]) Value(regs[ip[2]].frac_val / regs[ip[3]].frac_val);
         VM_NEXT
     }
 
-    VM_LABEL(FModi) {
-        regs[ip[1]] = regs[ip[2]].frac_val % regs[ip[3]].int_val;
+    VM_LABEL(FMod) {
+        new (&regs[ip[1]]) Value(regs[ip[2]].frac_val % regs[ip[3]].frac_val);
         VM_NEXT
     }
 

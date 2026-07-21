@@ -89,6 +89,7 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
                 ) return tail_ret->expr->type;
             return inference_type(tail_ret->expr.get());
         } //否则就是Block没有返回值
+        return std::make_shared<NoneType>();
         break;
     }
     case ASTKind::SuffixParen: {
@@ -116,7 +117,7 @@ std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
     }
     default: std::unreachable();
     }
-    return std::make_shared<NoneType>();
+    return std::make_shared<UnknownType>();
 }
 
 
@@ -237,6 +238,7 @@ void HirContext::check_expr(ExprNode *expr) noexcept {
         const auto node = reinterpret_cast<SuffixParenNode*>(expr);
         check_expr(node->expr.get());
         const auto left = inference_type(node->expr.get());
+        if (Type::is_null_type(left.get())) break;
         if (left->kind != TypeKind::Function) {
             throw_error(ErrorType::Analysis, "not a function type", node->line, node->col);
             break;
@@ -322,16 +324,26 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         for (const auto& [name, ty] : node->params->stmts) {
             scope.vars.emplace_back(name, ty, true);
         }
-        scope.name = "";
         scope_stack.push_back(scope);
 
-        check_expr(node->block.get());
-        if (Type::is_null_type(node->return_type.get())) node->return_type = node->block->type;
-        else {
-            if (!node->return_type->equals(node->block->type.get())) {
-                throw_error(ErrorType::Analysis, "return type mismatch in function `" + node->func_id + "`", node->line, node->col);
+        if (node->block->kind == ASTKind::Block) {
+            const auto* block = reinterpret_cast<BlockExprNode*>(node->block.get());
+            for (auto& s : block->stmts) {
+                check_stmt(s.get());
             }
+        } else check_expr(node->block.get());
+        if (!node->return_type->equals(scope_stack.back().return_type.get())) {
+            node->return_type = scope_stack.back().return_type;
         }
+        // if (Type::is_null_type(node->return_type.get())) {
+        //     node->return_type = node->block->type;
+        // }
+        // else {
+        //     if (!node->return_type->equals(node->block->type.get())) {
+        //         throw_error(ErrorType::Analysis, "return type mismatch in function `" + node->func_id + "`", node->line, node->col);
+        //         break;
+        //     }
+        // }
 
         scope_stack.pop_back();
         ref.type = node->make_type();
@@ -343,7 +355,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
         node->expr->type = inference_type(node->expr.get());
         for (auto& s : scope_stack | std::views::reverse) {
             if (s.scope == Scope::ScopeType::Function) {
-                if (!s.return_type) {
+                if (Type::is_null_type(s.return_type.get())) {
                     s.return_type = node->expr->type;
                     break;
                 }
@@ -410,7 +422,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
     }
 }
 
-bool HirContext::is_global_scope() noexcept {
+bool HirContext::is_global_scope() const noexcept {
     return scope_stack.size() == 1;
 }
 
@@ -425,24 +437,4 @@ void HirContext::new_cur_scope_var(std::string name, std::shared_ptr<Type> type,
 void HirContext::new_global_var(std::string name, std::shared_ptr<Type> type, bool is_mut) noexcept {
     scope_stack[0].vars.emplace_back(std::move(name), std::move(type), is_mut);
 }
-
-//
-// Scope *HirContext::parse_scope(ExprNode *node) noexcept {
-//
-//     switch (node->kind) {
-//     case ASTKind::Binary: {
-//         const auto id = reinterpret_cast<BinaryNode*>(node);
-//         auto left = parse_scope(id->lhs.get());
-//
-//         // todo!
-//         return std::nullopt;
-//         break;
-//     }
-//     case ASTKind::Identifier: {
-//         const auto id = reinterpret_cast<IdentifierNode*>(node);
-//         return &scope_stack.back();
-//     }
-//     default: std::unreachable();
-//     }
-// }
 

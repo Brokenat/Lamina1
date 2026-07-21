@@ -108,8 +108,8 @@ MirFMulExpr::MirFMulExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> 
 MirFDivExpr::MirFDivExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
     : MirOperateExpr(runtime::Opcode::Opcode::FDiv), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-MirFModiExpr::MirFModiExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
-    : MirOperateExpr(runtime::Opcode::Opcode::FModi), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+MirFModExpr::MirFModExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept
+    : MirOperateExpr(runtime::Opcode::Opcode::FMod), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
 MirFNegExpr::MirFNegExpr(std::shared_ptr<MirExpr> e) noexcept
     : MirOperateExpr(runtime::Opcode::Opcode::FNeg), e(std::move(e)) {}

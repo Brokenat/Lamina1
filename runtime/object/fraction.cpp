@@ -83,6 +83,11 @@ Fraction Fraction::operator/(const Fraction& other) const noexcept {
     return Fraction(num * other.den, den * other.num);
 }
 
+Fraction Fraction::operator%(const Fraction &other) const noexcept {
+    const auto rem = num * other.den % (den * other.num);
+    return Fraction(rem, other.den * den);
+}
+
 Fraction Fraction::operator-() const noexcept {
     return Fraction(-num, den);
 }

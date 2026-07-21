@@ -33,7 +33,7 @@ enum Opcode : uint8_t {
 
     LGet, LSet, // idx(1)
     GGet, GSet, // idx(2)
-    FAdd, FSub, FMul, FDiv, FModi, FNeg,
+    FAdd, FSub, FMul, FDiv, FMod, FNeg,
 };
 
 }

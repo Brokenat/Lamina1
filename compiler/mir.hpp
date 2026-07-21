@@ -191,9 +191,9 @@ struct MirFDivExpr : MirOperateExpr {
     std::shared_ptr<MirExpr> lhs, rhs;
     explicit MirFDivExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
 };
-struct MirFModiExpr : MirOperateExpr {
+struct MirFModExpr : MirOperateExpr {
     std::shared_ptr<MirExpr> lhs, rhs;
-    explicit MirFModiExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+    explicit MirFModExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
 };
 struct MirFNegExpr : MirOperateExpr {
     std::shared_ptr<MirExpr> e;

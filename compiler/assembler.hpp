@@ -5,7 +5,9 @@
 #pragma once
 namespace lmx {
 
-class Assembler {
+class InstEmitter {
+public:
+
 };
 
 }

@@ -14,6 +14,10 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "compiler/error.hpp"
+#include "compiler/mir_builder.hpp"
+#include "compiler/mir_printer.hpp"
+
 LmState lmx_newState() {
     auto* node = static_cast<LmLinkedNode *>(malloc(sizeof(LmLinkedNode)));
     memset(node, 0, sizeof(LmLinkedNode));
@@ -43,9 +47,29 @@ void lmx_printASTFromString(LmState *state, FILE *file, const char *code, const 
     auto tokens = lmx::Lexer(c).tokenize(c);
     const auto node = lmx::Parser(tokens).parse_module(name);
     lmx::hir::HirContext().check_module(node.get());
-    const auto ast_str = lmx::AstPrinter::print(*node);
-    if (fwrite(ast_str.c_str(), 1, ast_str.length(), file) != ast_str.length()) {
-        fprintf(stderr, "Error writing AST to file\n");
+    if (!errd) {
+        const auto ast_str = lmx::AstPrinter::print(*node);
+        if (fwrite(ast_str.c_str(), 1, ast_str.length(), file) != ast_str.length()) {
+            fprintf(stderr, "Error writing AST to file\n");
+        }
+    }
+}
+
+void lmx_printMIRFromString(LmState *state, FILE *file, const char *code, const char *name) {
+    std::string c = code;
+    auto tokens = lmx::Lexer(c).tokenize(c);
+    const auto node = lmx::Parser(tokens).parse_module(name);
+    if (errd) return;
+    lmx::hir::HirContext().check_module(node.get());
+    if (errd) return;
+
+    const auto mir = lmx::mir::MirBuilder::from_ast_module(node);
+    if (errd) return;
+
+    const auto mir_str = lmx::mir::MirPrinter::print(mir);
+
+    if (fwrite(mir_str.c_str(), 1, mir_str.length(), file) != mir_str.length()) {
+        fprintf(stderr, "Error writing MIR to file\n");
     }
 }
 

@@ -273,6 +273,10 @@ std::shared_ptr<StmtNode> Parser::parse_stmt() noexcept {
     case TokenType::KW_VAR: case TokenType::KW_LET: {
         return std::static_pointer_cast<VarDeclNode>(parse_var());
     }
+    case TokenType::KW_RETURN: {
+        // advance();
+        return parse_return();
+    }
     default: {
         auto expr = parse_expr();
         if (match(TokenType::ASSIGN)) {
@@ -283,6 +287,17 @@ std::shared_ptr<StmtNode> Parser::parse_stmt() noexcept {
         return std::make_shared<ExprStmtNode>(line, col, expr);
     }
     }
+}
+
+std::shared_ptr<StmtNode> Parser::parse_return() noexcept {
+    auto old_line = cur().line, old_col = cur().col;
+    advance();
+    std::shared_ptr<ExprNode> expr = nullptr;
+    auto line = cur().line, col = cur().col;
+    if (old_line == line) {
+        expr = parse_expr();
+    }
+    return std::make_shared<ReturnNode>(line, col,  expr);
 }
 
 std::shared_ptr<StmtNode> Parser::parse_var() noexcept {

@@ -27,6 +27,7 @@ struct Value {
     explicit Value(int64_t val) noexcept;
     explicit Value(bool val)    noexcept;
     explicit Value(int num, int den);
+    explicit Value(Fraction frac) noexcept;
 
     Object* operator->() const noexcept;
 
@@ -36,6 +37,8 @@ struct Value {
     Value& operator=(bool bool_val)     noexcept;
     Value& operator=(const Value& other)noexcept = default;
     Value& operator=(Value&& other)     noexcept = default;
+    Value &operator=(Fraction fraction);
+    Value& operator=(std::nullptr_t)   noexcept;
 
     Value operator+(const Value& other) const noexcept;
     Value operator-(const Value& other) const noexcept;
@@ -62,6 +65,8 @@ struct Value {
     explicit operator bool() const noexcept;
 
     [[nodiscard]] std::string to_string() const noexcept;
+
+
 };
 
 }

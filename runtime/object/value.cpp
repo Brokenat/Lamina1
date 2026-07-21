@@ -19,6 +19,22 @@ Value::Value(Object *obj) noexcept : kind(ValueKind::Obj), obj(obj) {}
 
 Value::Value(const int num, const int den) : kind(ValueKind::Fraction), frac_val(num, den) {}
 
+Value::Value(const Fraction frac) noexcept : kind(ValueKind::Fraction), frac_val(frac) {}
+
+Value &Value::operator=(const Fraction fraction) {
+    assert(this->kind == ValueKind::Fraction);
+    this->kind = ValueKind::Fraction;
+    this->frac_val = fraction;
+    return *this;
+}
+
+Value &Value::operator=(std::nullptr_t) noexcept {
+    assert(this->kind == ValueKind::Null);
+    this->kind = ValueKind::Null;
+    this->null_val = nullptr;
+    return *this;
+}
+
 Object *Value::operator->() const noexcept {
     assert(this->kind == ValueKind::Obj);
     return obj;

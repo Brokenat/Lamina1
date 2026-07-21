@@ -81,7 +81,7 @@ class Builder {
             if (is_float) return std::make_shared<MirFDivExpr>(std::move(lhs), std::move(rhs));
             return std::make_shared<MirIDivExpr>(std::move(lhs), std::move(rhs));
         case BinaryNode::Op::Mod:
-            if (is_float) return std::make_shared<MirFModiExpr>(std::move(lhs), std::move(rhs));
+            if (is_float) return std::make_shared<MirFModExpr>(std::move(lhs), std::move(rhs));
             return std::make_shared<MirIModExpr>(std::move(lhs), std::move(rhs));
         case BinaryNode::Op::Pow:
             if (is_float) return std::make_shared<MirFMulExpr>(std::move(lhs), std::move(rhs));

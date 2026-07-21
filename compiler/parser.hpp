@@ -44,6 +44,9 @@ public:
     explicit Parser() = delete;
     std::shared_ptr<ExprNode> parse_expr() noexcept;
     std::shared_ptr<StmtNode> parse_stmt() noexcept;
+
+    std::shared_ptr<StmtNode> parse_return() noexcept;
+
     std::shared_ptr<StmtNode> parse_stmt(const std::vector<Token> &tokens) noexcept;
 
     std::shared_ptr<Module> parse_module(const std::string& name) noexcept;

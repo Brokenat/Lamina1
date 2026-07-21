@@ -1,4 +1,4 @@
-add_library(lamina_runtime
+add_library(lamina_runtime OBJECT
     binary.cpp
     binary.hpp
     vm.cpp

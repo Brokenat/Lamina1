@@ -11,7 +11,7 @@ ConstantPoolInfo::ConstantPoolInfo(decltype(frac_info) frac_info) noexcept
 ConstantPoolInfo::ConstantPoolInfo(decltype(int_value) int_value) noexcept
     : id(ConstantId::Int), int_value(int_value) {}
 
-ConstantPoolInfo::ConstantPoolInfo(decltype(str) str) noexcept
+ConstantPoolInfo::ConstantPoolInfo(const decltype(str) str) noexcept
     : id(ConstantId::Str), str(str) {}
 }
 

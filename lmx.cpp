@@ -45,7 +45,9 @@ static void lmx_state_addNode(LmState* state, void* ptr) {
 void lmx_printASTFromString(LmState *state, FILE *file, const char *code, const char* name) {
     std::string c = code;
     auto tokens = lmx::Lexer(c).tokenize(c);
+    if (errd) return;
     const auto node = lmx::Parser(tokens).parse_module(name);
+    if (errd) return;
     lmx::hir::HirContext().check_module(node.get());
     if (errd) return;
 

@@ -30,7 +30,7 @@ HirContext::HirContext() noexcept {
 }
 
 std::shared_ptr<Type> HirContext::inference_type(ExprNode* type) noexcept {
-    if (!type) return nullptr;
+    if (!type) return std::make_shared<UnknownType>();
     switch (type->kind) {
     case ASTKind::Literal: {
         const auto node = reinterpret_cast<LiteralNode*>(type);
@@ -132,6 +132,7 @@ void HirContext::check_module(const Module *mod) noexcept {
     }
 }
 void HirContext::check_expr(ExprNode *expr) noexcept {
+    if (!expr) return;
     switch (expr->kind) {
     case ASTKind::Literal: {
         expr->type = inference_type(expr);
@@ -351,6 +352,7 @@ void HirContext::check_stmt(StmtNode* stmt) noexcept {
     }
     case ASTKind::Return: {
         const auto node = reinterpret_cast<ReturnNode*>(stmt);
+        if (!node->expr) break;
         check_expr(node->expr.get());
         node->expr->type = inference_type(node->expr.get());
         for (auto& s : scope_stack | std::views::reverse) {

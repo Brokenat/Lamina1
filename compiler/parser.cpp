@@ -244,6 +244,9 @@ std::shared_ptr<ExprNode> Parser::parse_primary() noexcept {
     case TokenType::END_OF_FILE: {
         return nullptr;
     }
+    case TokenType::LBRACE: {
+        return parse_block();
+    }
     default: {
         throw_error(ErrorType::Parse, "`" + cur().text + "` is wrong primary token", cur().line, cur().col);
         if (pos <= tokens.size()) advance();

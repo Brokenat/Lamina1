@@ -11,11 +11,15 @@ int main(int argc, char** argv) {
 let v = add(1, 2)
 
 func add(a int, b int) {
-    return a + b * 2
+    {
+        var c = 5
+
+        a + b * 2 + c
+    }
 }
 )";
     auto state = lmx_newState();
-    lmx_printASTFromString(&state, stdout, code.c_str(), "test");
+    lmx_printMIRFromString(&state, stdout, code.c_str(), "test");
 
     lmx_deleteState(&state);
 }

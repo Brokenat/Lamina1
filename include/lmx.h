@@ -3,8 +3,11 @@
 //
 
 #pragma once
+#if defined(_MSC_VER)
+#error "MSVC is not supported, use clang-cl or other compilers in Windows"
+#endif
 #ifdef LMX_DLL
-    #ifdef _WIN32
+    #if defined(_WIN32) || defined(_WIN64)
         #ifdef LMC_BUILD
             #define LM_API __declspec(dllexport)
         #else
@@ -14,13 +17,14 @@
         #define LM_API __attribute__((visibility("default")))
     #endif
 #else
-
     #define LM_API
 #endif
 
 
 #define LMX_VERSION     ((uint32_t)0x00000001)
 #define LMX_MAGIC_NUM   ((uint32_t)0x4d4c5451)
+
+#define LMX_INLINE __attribute__((always_inline)) inline
 #if __cplusplus
 
 extern "C" {

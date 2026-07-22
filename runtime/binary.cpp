@@ -15,11 +15,3 @@ ConstantPoolInfo::ConstantPoolInfo(const decltype(str) str) noexcept
     : id(ConstantId::Str), str(str) {}
 }
 
-#if defined(_MSC_VER)
-StringInfo::StringInfo(uint32_t len, decltype(str) str) noexcept : len(len), str(str) {}
-ConstantPoolInfo::~ConstantPoolInfo() noexcept {
-    if (id == ConstantId::Str) {
-        delete str;
-    }
-}
-#endif

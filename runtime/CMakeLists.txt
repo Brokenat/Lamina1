@@ -1,19 +1,12 @@
 add_library(lamina_runtime OBJECT
     binary.cpp
-    binary.hpp
     vm.cpp
-    vm.hpp
-    opcode.hpp
-
     object/fraction.cpp
     object/string.cpp
     object/object.cpp
     object/value.cpp
-    object/value.hpp
-        object/code_module.cpp
-        object/code_module.hpp
+    object/code_module.cpp
     gc.cpp
-    gc.hpp
 )
 
 

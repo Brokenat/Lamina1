@@ -11,11 +11,10 @@
 namespace lmx::runtime {
 
 class CodeModule : public Object {
-
 public:
     std::vector<ConstantPoolInfo> cp;
-    std::vector<TypeInfo> types;
     std::vector<uint8_t*> funcs;
+    std::vector<TypeInfo> types;
     uint8_t* code;
     explicit CodeModule(
         std::vector<ConstantPoolInfo> cp,

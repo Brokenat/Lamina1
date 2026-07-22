@@ -17,13 +17,7 @@ struct FracInfo {
 };
 struct StringInfo {
     uint32_t length;
-#if defined(_MSC_VER)
-    char* str;
-    explicit StringInfo(uint32_t len, decltype(str) str) noexcept;
-#else
     char str[];
-#endif
-
 };
 enum class TypeTag : uint16_t {
     Func,
@@ -43,9 +37,6 @@ struct ConstantPoolInfo {
     explicit ConstantPoolInfo(decltype(frac_info) frac_info) noexcept;
     explicit ConstantPoolInfo(decltype(str) str) noexcept;
 
-#if defined(_MSC_VER)
-    ~ConstantPoolInfo() noexcept;
-#endif
 };
 
 

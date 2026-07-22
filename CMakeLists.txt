@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.31)
 project(Lamina LANGUAGES CXX)
+
+if (MSVC)
+    message(FATAL_ERROR "MSVC is not supported, use clang-cl or other compilers in Windows")
+endif ()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include_directories(include)
@@ -25,7 +30,7 @@ add_library(laminaCore SHARED
     $<TARGET_OBJECTS:laminac>
     $<TARGET_OBJECTS:lamina_runtime>
 )
-
+target_compile_definitions(laminaCore PRIVATE LMX_DLL)
 if(LMX_BUILD_STATIC)
     add_library(laminac_s STATIC $<TARGET_OBJECTS:laminac>)
     add_library(lamina_runtime_s STATIC $<TARGET_OBJECTS:lamina_runtime>)
@@ -34,7 +39,6 @@ if(LMX_BUILD_STATIC)
 endif()
 
 set_target_properties(laminac PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
 
 
 target_link_libraries(lamina PRIVATE laminaCore)
@@ -55,7 +59,7 @@ foreach(tgt IN ITEMS ${LMX_ALL_TARGETS})
 endforeach()
 
 
-if(MSVC)
+if(MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang") # clang-cl
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /arch:AVX2 /Oi /fp:fast")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
@@ -63,5 +67,4 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -funroll-loops -ffast-math -flto -fomit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto -s")
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto -s")
-
 endif()

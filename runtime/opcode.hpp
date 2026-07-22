@@ -36,6 +36,7 @@ enum Opcode : uint8_t {
     FAdd, FSub, FMul, FDiv, FMod, FNeg,
 
     MovRR,
+    Call,// reg(1) arg_count(1)
 };
 
 }

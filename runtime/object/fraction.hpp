@@ -8,9 +8,9 @@ namespace lmx::runtime {
      int32_t num {0};
      int32_t den {1};
 
-     Fraction() noexcept = default;
+     Fraction() noexcept;
 
-     ~Fraction() noexcept = default;
+     ~Fraction() noexcept;
 
      void simplify() noexcept;
      explicit Fraction(int32_t num, int32_t den) noexcept;

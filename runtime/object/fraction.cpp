@@ -4,6 +4,8 @@
 
 using namespace lmx::runtime;
 
+Fraction::Fraction() noexcept = default;
+Fraction::~Fraction() noexcept = default;
 
 Fraction::Fraction(const int32_t num, const int32_t den) noexcept
 : num(num), den(den) {simplify();}

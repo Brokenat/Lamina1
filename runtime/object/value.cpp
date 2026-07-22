@@ -175,3 +175,28 @@ Value::operator bool() const noexcept {
     assert(this->kind == ValueKind::Bool);
     return bool_val;
 }
+
+Value &Value::operator=(const Value &other) noexcept {
+    if (other.kind == ValueKind::Obj) {
+        this->obj = other.obj->get();
+        this->kind = ValueKind::Obj;
+    } else {
+        this->kind = other.kind;
+        this->obj = other.obj;
+    }
+    return *this;
+}
+
+Value &Value::operator=(Value &&other) noexcept = default;
+
+Value::~Value() noexcept {
+    switch (this->kind) {
+    case ValueKind::Obj: {
+        this->obj->release();
+        break;
+    }
+    default:{}
+    }
+    kind = ValueKind::Null;
+    c_ptr = nullptr;
+}

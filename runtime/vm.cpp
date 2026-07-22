@@ -195,7 +195,13 @@ int LaminaVM::run(CodeModule *new_prog) noexcept {
     }
 
     VM_LABEL(CallFast) {
-        new_frame(this, ip + 1);
+        new_frame(this, ip + 4);
+        auto i = ip[3];
+        while (i != 0) {
+            cur_frame->local_vars[i] = regs[LMX_VM_REG_COUNT - 1 - i];
+            i--;
+        }
+        cur_frame->local_vars[0] = regs[LMX_VM_REG_COUNT - 1];
         ip = new_prog->funcs[read_u16(ip + 1)];
         VM_NEXT_RAW
     }
@@ -312,7 +318,13 @@ int LaminaVM::run(CodeModule *new_prog) noexcept {
         VM_NEXT
     }
     VM_LABEL(Call) {
-        new_frame(this, ip + 1);
+        new_frame(this, ip + 4);
+        auto i = ip[2];
+        while (i != 0) {
+            cur_frame->local_vars[i] = regs[LMX_VM_REG_COUNT - 1 - i];
+            i--;
+        }
+        cur_frame->local_vars[0] = regs[LMX_VM_REG_COUNT - 1];
         ip = static_cast<const uint8_t*>(regs[ip[1]].c_ptr);
         VM_NEXT_RAW
     }

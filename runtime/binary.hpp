@@ -1,13 +1,12 @@
 //
 // Created by meian on 2026/4/6.
-//
+// 这一页是关于常量池编码的
 
 #pragma once
 #include <cstdint>
 #include <vector>
 namespace lmx::runtime {
 
-constexpr uint32_t MAGIC_NUM = 0x434D4C00;
 enum class ConstantId : uint8_t {
     Int, Frac, Str
 };

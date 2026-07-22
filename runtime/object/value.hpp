@@ -35,8 +35,8 @@ struct Value {
     Value& operator=(Object* obj)       noexcept;
     Value& operator=(int64_t int_val)   noexcept;
     Value& operator=(bool bool_val)     noexcept;
-    Value& operator=(const Value& other)noexcept = default;
-    Value& operator=(Value&& other)     noexcept = default;
+    Value& operator=(const Value& other)noexcept;
+    Value& operator=(Value&& other)     noexcept;
     Value &operator=(Fraction fraction);
     Value& operator=(std::nullptr_t)   noexcept;
 
@@ -66,7 +66,7 @@ struct Value {
 
     [[nodiscard]] std::string to_string() const noexcept;
 
-
+    ~Value() noexcept;
 };
 
 }

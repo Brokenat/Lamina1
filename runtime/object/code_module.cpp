@@ -80,8 +80,8 @@ CodeModule::CodeModule(std::vector<ConstantPoolInfo>&& cp, std::vector<TypeInfo>
 CodeModule::CodeModule(uint8_t *binary) noexcept : Object(ObjectKind::Code) {
     ModuleLoader::check_magic(binary);
     ModuleLoader::check_version(binary);
-    ModuleLoader::load_cp(cp, binary);
     ModuleLoader::load_funcs(funcs, binary);
+    ModuleLoader::load_cp(cp, binary);
     code = binary;
 }
 

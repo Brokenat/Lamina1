@@ -48,26 +48,29 @@ public:
     int run(CodeModule* prog) noexcept;
 
     friend LMX_INLINE void new_frame(LaminaVM* vm, const uint8_t *ret_addr) noexcept {
-        vm->local_vars_curp += LMX_LOCAL_VAR_COUNT;
         if (vm->free_frames.empty()) {
             vm->cur_frame = new Frame(vm->cur_frame, ret_addr, vm->local_vars_curp);
             //cur_frame = frame;
-            return;
+            //return;
+        } else {
+            const auto frame = vm->free_frames.back();
+            vm->free_frames.pop_back();
+            new (frame) Frame(vm->cur_frame, ret_addr, vm->local_vars_curp);
+            vm->cur_frame = frame;
         }
-        const auto frame = vm->free_frames.back();
-        vm->free_frames.pop_back();
-        frame->last = vm->cur_frame;
-        frame->local_vars = vm->local_vars_curp;
-        frame->ret_addr = ret_addr;
-        vm->cur_frame = frame;
+        vm->local_vars_curp += LMX_LOCAL_VAR_COUNT;
     }
     friend LMX_INLINE const uint8_t *pop_frame(LaminaVM* vm) noexcept {
         auto* cur_frame = vm->cur_frame;
         vm->local_vars_curp -= LMX_LOCAL_VAR_COUNT;
+        auto i = 0;
+        while (i <= LMX_LOCAL_VAR_COUNT) {
+            (vm->local_vars_curp + i)->~Value();
+            i++;
+        }
         vm->free_frames.push_back(cur_frame);
-        const auto ret = cur_frame->ret_addr;
         vm->cur_frame = cur_frame->last;
-        return ret;
+        return cur_frame->ret_addr;
     }
 };
 

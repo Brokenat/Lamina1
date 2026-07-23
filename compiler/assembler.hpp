@@ -6,6 +6,7 @@
 #include <bitset>
 #include <cstdint>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 #include "mir.hpp"
@@ -70,6 +71,7 @@ public:
 
     std::vector<Val> vals;
     std::vector<GlobalVar> globals;
+    std::unordered_map<std::string, size_t> funcs;
     RegAllocator reg;
 
     std::optional<Val*> find_var(const std::string& name) noexcept;
@@ -84,13 +86,13 @@ public:
     static void write_u32(std::vector<uint8_t>& buf, uint32_t value) noexcept;
     static void write_u64(std::vector<uint8_t>& buf, uint64_t value) noexcept;
     static void write_n(std::vector<uint8_t>& buf, const uint8_t* src, size_t n) noexcept;
-    static std::vector<uint8_t> asm_module(mir::MirModule* mod) noexcept;
+    std::vector<uint8_t> asm_module(mir::MirModule* mod) noexcept;
 
-    static std::vector<uint8_t> asm_func(AssemblerContext &c, mir::MirFuncDefine *def) noexcept;
+    std::vector<uint8_t> asm_func(AssemblerContext &c, mir::MirFuncDefine *def) noexcept;
 
-    static uint8_t asm_mir_expr(AssemblerContext &c, InstEmitter::InstSeq &result, mir::MirExpr *node) noexcept;
+    uint8_t asm_mir_expr(AssemblerContext &c, InstEmitter::InstSeq &result, mir::MirExpr *node) noexcept;
 
-    static InstEmitter::InstSeq asm_mir_node(AssemblerContext &c, mir::MirNode *node) noexcept;
+    InstEmitter::InstSeq asm_mir_node(AssemblerContext &c, mir::MirNode *node) noexcept;
 };
 
 }

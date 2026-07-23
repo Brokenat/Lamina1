@@ -284,45 +284,54 @@ uint8_t Assembler::asm_mir_expr(AssemblerContext& c, InstEmitter::InstSeq& insts
         switch (e->operate_kind) {
         case mir::MirOperateKind::Normal: {
             if (InstEmitter::inst_is_call(e->opcode)) {
-                return 0;
-            } else {
                 switch (e->opcode) {
-                case runtime::Opcode::New: {
+                case runtime::Opcode::CCall:
+                case runtime::Opcode::CallFast:
+                case runtime::Opcode::Call:
+                case runtime::Opcode::CallVirtual: {
 
                 }
-                case runtime::Opcode::GetTrue:
-                case runtime::Opcode::GetFalse:
-                case runtime::Opcode::GetNull:
-                case runtime::Opcode::IAdd:
-                case runtime::Opcode::ISub:
-                case runtime::Opcode::IMul:
-                case runtime::Opcode::IDiv:
-                case runtime::Opcode::IMod:
-                case runtime::Opcode::IPow:
-                case runtime::Opcode::INeg:
-                case runtime::Opcode::IConst:
-                case runtime::Opcode::CConst:
-                case runtime::Opcode::ICmpEq:
-                case runtime::Opcode::ICmpNe:
-                case runtime::Opcode::ICmpLt:
-                case runtime::Opcode::ICmpLe:
-                case runtime::Opcode::ICmpGt:
-                case runtime::Opcode::ICmpGe:
-                case runtime::Opcode::LGet:
-                case runtime::Opcode::LSet:
-                case runtime::Opcode::GGet:
-                case runtime::Opcode::GSet:
-                case runtime::Opcode::FAdd:
-                case runtime::Opcode::FSub:
-                case runtime::Opcode::FMul:
-                case runtime::Opcode::FDiv:
-                case runtime::Opcode::FMod:
-                case runtime::Opcode::FNeg:
-                case runtime::Opcode::MovRR:
-                case runtime::Opcode::Pop:
-
-                default: ;
+                default:{}
                 }
+                return 0;
+            }
+            switch (e->opcode) {
+            case runtime::Opcode::New: {
+
+            }
+            case runtime::Opcode::GetTrue:
+            case runtime::Opcode::GetFalse:
+            case runtime::Opcode::GetNull:
+            case runtime::Opcode::IAdd:
+            case runtime::Opcode::ISub:
+            case runtime::Opcode::IMul:
+            case runtime::Opcode::IDiv:
+            case runtime::Opcode::IMod:
+            case runtime::Opcode::IPow:
+            case runtime::Opcode::INeg:
+            case runtime::Opcode::IConst:
+            case runtime::Opcode::CConst:
+            case runtime::Opcode::ICmpEq:
+            case runtime::Opcode::ICmpNe:
+            case runtime::Opcode::ICmpLt:
+            case runtime::Opcode::ICmpLe:
+            case runtime::Opcode::ICmpGt:
+            case runtime::Opcode::ICmpGe:
+            case runtime::Opcode::LGet:
+            case runtime::Opcode::LSet:
+            case runtime::Opcode::GGet:
+            case runtime::Opcode::GSet:
+            case runtime::Opcode::FAdd:
+            case runtime::Opcode::FSub:
+            case runtime::Opcode::FMul:
+            case runtime::Opcode::FDiv:
+            case runtime::Opcode::FMod:
+            case runtime::Opcode::FNeg:
+            case runtime::Opcode::MovRR:
+            case runtime::Opcode::Pop:
+
+            default: ;
+
             }
             break;
         }

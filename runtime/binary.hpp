@@ -27,9 +27,9 @@ struct TypeInfo {
 struct ConstantPoolInfo {
     ConstantId id;
     union {
-        int64_t int_value;
-        FracInfo* frac_info;
-        StringInfo* str;
+        const int64_t int_value;
+        const FracInfo* frac_info;
+        const StringInfo* str;
     };
 
     explicit ConstantPoolInfo(decltype(int_value) int_value) noexcept;
@@ -39,7 +39,6 @@ struct ConstantPoolInfo {
 };
 
 
-struct BinaryModule {
-    std::vector<ConstantPoolInfo> constant_pool;
-};
+
+
 }

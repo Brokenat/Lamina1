@@ -3,12 +3,13 @@
 //
 
 #pragma once
+#include "code_module.hpp"
 #include "fraction.hpp"
 #include "object.hpp"
 
 namespace lmx::runtime {
 enum class ValueKind {
-    Null, C_Ptr, Obj, Int, Bool, Fraction
+    Null, C_Ptr, Obj, Int, Bool, Fraction,
 };
 struct Value {
     ValueKind kind{ValueKind::Null};

@@ -9,26 +9,32 @@
 #include "../binary.hpp"
 
 namespace lmx::runtime {
+class CodeModule;
+struct FuncObj {
+    CodeModule* mod;
+    const uint8_t* addr;
+    explicit FuncObj(CodeModule* mod, const uint8_t* addr) noexcept;
+};
 
 class CodeModule : public Object {
 public:
     std::vector<ConstantPoolInfo> cp;
-    std::vector<uint8_t*> funcs;
+    std::vector<FuncObj> funcs;
     std::vector<TypeInfo> types;
-    uint8_t* code;
+    const uint8_t* code;
     explicit CodeModule(
         std::vector<ConstantPoolInfo> cp,
         std::vector<TypeInfo> types,
-        std::vector<uint8_t*> funcs,
-        uint8_t* code
+        std::vector<FuncObj> funcs,
+        const uint8_t* code
         ) noexcept;
     explicit CodeModule(
         std::vector<ConstantPoolInfo>&& cp,
         std::vector<TypeInfo>&& types,
-        std::vector<uint8_t*>&& funcs,
-        uint8_t* code
+        std::vector<FuncObj>&& funcs,
+        const uint8_t* code
         ) noexcept;
-    explicit CodeModule(uint8_t* binary) noexcept;
+    explicit CodeModule(const uint8_t* binary) noexcept;
     [[nodiscard]] Object*       clone       () const noexcept override;
     [[nodiscard]] std::string   to_string   () const noexcept override;
     [[nodiscard]] std::string   type_info   () const noexcept override;

@@ -21,21 +21,21 @@ namespace lmx::runtime {
 
 struct Frame {
     Frame* last;
+    CodeModule* mod;
     const uint8_t* ret_addr;
     Value* local_vars;
-    explicit Frame(Frame* last, const uint8_t* ret_addr, Value* local_vars) noexcept;
+    explicit Frame(Frame* last, CodeModule* mod, const uint8_t* ret_addr, Value* local_vars) noexcept;
     ~Frame() noexcept;
 };
 class LaminaVM {
     Value regs[LMX_VM_REG_COUNT];
     ConstantPoolInfo* cp;
     Value* stack;
-    CodeModule* prog          {nullptr};
     Value* local_vars_bp;
     Value* local_vars_curp;
     Value* global_vars;
     std::vector<Frame*> free_frames;
-    Frame* cur_frame;
+    Frame* cur_frame{};
     LmGCAllocator allocator{};
 
     std::span<char*> args;
@@ -47,15 +47,15 @@ public:
     ~LaminaVM() noexcept;
     int run(CodeModule* prog) noexcept;
 
-    friend LMX_INLINE void new_frame(LaminaVM* vm, const uint8_t *ret_addr) noexcept {
+    friend LMX_INLINE void new_frame(LaminaVM* vm, CodeModule* mod, const uint8_t *ret_addr) noexcept {
         if (vm->free_frames.empty()) {
-            vm->cur_frame = new Frame(vm->cur_frame, ret_addr, vm->local_vars_curp);
+            vm->cur_frame = new Frame(vm->cur_frame, mod, ret_addr, vm->local_vars_curp);
             //cur_frame = frame;
             //return;
         } else {
             const auto frame = vm->free_frames.back();
             vm->free_frames.pop_back();
-            new (frame) Frame(vm->cur_frame, ret_addr, vm->local_vars_curp);
+            new (frame) Frame(vm->cur_frame, mod, ret_addr, vm->local_vars_curp);
             vm->cur_frame = frame;
         }
         vm->local_vars_curp += LMX_LOCAL_VAR_COUNT;

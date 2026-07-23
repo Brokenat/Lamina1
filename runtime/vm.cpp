@@ -15,7 +15,7 @@ LaminaVM::LaminaVM(ConstantPoolInfo *cp, const int argc, char **argv) noexcept :
     local_vars_bp(new Value[LMX_LOCAL_VAR_COUNT * LMX_CALLSTACK_MAX_COUNT]),
     local_vars_curp(local_vars_bp),
     global_vars(new Value[65536]),
-    cur_frame(new Frame(nullptr, nullptr, local_vars_curp)),
+    // cur_frame(new Frame(nullptr, nullptr, local_vars_curp)),
     args(argv, argc) {}
 
 LaminaVM::~LaminaVM() noexcept {
@@ -26,8 +26,8 @@ LaminaVM::~LaminaVM() noexcept {
     delete cur_frame;
 }
 
-Frame::Frame(Frame* last, const uint8_t *ret_addr, Value* local_vars) noexcept
-    : last(last), ret_addr(ret_addr), local_vars(local_vars) {}
+Frame::Frame(Frame* last, CodeModule* mod ,const uint8_t *ret_addr, Value* local_vars) noexcept
+    : last(last), mod(mod), ret_addr(ret_addr), local_vars(local_vars) {}
 
 Frame::~Frame() noexcept = default;
 
@@ -62,8 +62,8 @@ goto *dispatch[*ip];
 #define VM_NEXT_RAW break;
 #endif
 
-int LaminaVM::run(CodeModule *new_prog) noexcept {
-    this->prog = new_prog;
+int LaminaVM::run(CodeModule *prog) noexcept {
+    cur_frame = new Frame(nullptr, prog, nullptr, local_vars_curp);
     const uint8_t* ip = prog->code;
     static constexpr auto read_i16 = [](const uint8_t* p) -> int16_t {
         return static_cast<int16_t>(p[0] | p[1] << 8);
@@ -195,14 +195,15 @@ int LaminaVM::run(CodeModule *new_prog) noexcept {
     }
 
     VM_LABEL(CallFast) {
-        new_frame(this, ip + 4);
+        const auto* func = &prog->funcs[read_u16(ip + 1)];
+        new_frame(this, func->mod, ip + 4);
         auto i = ip[3];
         while (i != 0) {
             cur_frame->local_vars[i] = regs[LMX_VM_REG_COUNT - 1 - i];
             i--;
         }
         cur_frame->local_vars[0] = regs[LMX_VM_REG_COUNT - 1];
-        ip = new_prog->funcs[read_u16(ip + 1)];
+        ip = func->addr;
         VM_NEXT_RAW
     }
 
@@ -318,14 +319,16 @@ int LaminaVM::run(CodeModule *new_prog) noexcept {
         VM_NEXT
     }
     VM_LABEL(Call) {
-        new_frame(this, ip + 4);
+        const auto* func = static_cast<const FuncObj*>(regs[ip[1]].c_ptr);
+        new_frame(this, func->mod, ip + 4);
+
         auto i = ip[2];
         while (i != 0) {
             cur_frame->local_vars[i] = regs[LMX_VM_REG_COUNT - 1 - i];
             i--;
         }
         cur_frame->local_vars[0] = regs[LMX_VM_REG_COUNT - 1];
-        ip = static_cast<const uint8_t*>(regs[ip[1]].c_ptr);
+        ip = func->addr;
         VM_NEXT_RAW
     }
 

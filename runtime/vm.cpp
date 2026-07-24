@@ -4,13 +4,14 @@
 
 #include "vm.hpp"
 #include "object/fraction.hpp"
-#include "opcode.hpp"
 #include <cmath>
+#include <iostream>
+#include <ostream>
 #include <ranges>
 
 namespace lmx::runtime {
-LaminaVM::LaminaVM(ConstantPoolInfo *cp, const int argc, char **argv) noexcept :
-    cp(cp),
+LaminaVM::LaminaVM(const int argc, char **argv) noexcept :
+    // cp(cp),
     stack(new Value[LMX_VM_REG_COUNT * LMX_CALLSTACK_MAX_COUNT]),
     local_vars_bp(new Value[LMX_LOCAL_VAR_COUNT * LMX_CALLSTACK_MAX_COUNT]),
     local_vars_curp(local_vars_bp),
@@ -46,7 +47,7 @@ static const void* dispatch[] = {\
     &&opLGet, &&opLSet,\
     &&opGGet, &&opGSet,\
     &&opFAdd, &&opFSub, &&opFMul, &&opFDiv, &&opFMod, &&opFNeg,\
-    &&opMovRR,&&opCall\
+    &&opMovRR,&&opCall, &&opAnd, &&opOr,\
 };\
 goto *dispatch[*ip];
 
@@ -61,16 +62,17 @@ goto *dispatch[*ip];
 #define VM_NEXT ip += 4; break;
 #define VM_NEXT_RAW break;
 #endif
-
+LMX_INLINE static constexpr int16_t read_i16(const uint8_t* p) {
+    return static_cast<int16_t>(p[0] | p[1] << 8);
+};
+LMX_INLINE static constexpr uint16_t read_u16(const uint8_t* p) {
+    return static_cast<uint16_t>(p[0] | (p[1] << 8));
+};
 int LaminaVM::run(CodeModule *prog) noexcept {
     cur_frame = new Frame(nullptr, prog, nullptr, local_vars_curp);
     const uint8_t* ip = prog->code;
-    static constexpr auto read_i16 = [](const uint8_t* p) -> int16_t {
-        return static_cast<int16_t>(p[0] | p[1] << 8);
-    };
-    static constexpr auto read_u16 = [](const uint8_t* p) -> uint16_t {
-        return static_cast<uint16_t>(p[0] | (p[1] << 8));
-    };
+    std::cout << "ok" << std::endl;
+
 
     VM_DISPATCH
 
@@ -80,7 +82,7 @@ int LaminaVM::run(CodeModule *prog) noexcept {
 
     VM_LABEL(New) {
 
-        switch (const auto& c = cp[read_u16(ip + 2)]; c.id) {
+        switch (const auto& c = cur_frame->mod->cp[read_u16(ip + 2)]; c.id) {
         case ConstantId::Int: {
             regs[ip[1]] = c.int_value;
             break;
@@ -195,7 +197,7 @@ int LaminaVM::run(CodeModule *prog) noexcept {
     }
 
     VM_LABEL(CallFast) {
-        const auto* func = &prog->funcs[read_u16(ip + 1)];
+        const auto* func = &cur_frame->mod->funcs[read_u16(ip + 1)];
         new_frame(this, func->mod, ip + 4);
         auto i = ip[3];
         while (i != 0) {
@@ -330,6 +332,14 @@ int LaminaVM::run(CodeModule *prog) noexcept {
         cur_frame->local_vars[0] = regs[LMX_VM_REG_COUNT - 1];
         ip = func->addr;
         VM_NEXT_RAW
+    }
+    VM_LABEL(And) {
+        regs[ip[1]] = regs[ip[2]] && regs[ip[3]];
+        VM_NEXT
+    }
+    VM_LABEL(Or) {
+        regs[ip[1]] = regs[ip[2]] || regs[ip[3]];
+        VM_NEXT
     }
 
     VM_END

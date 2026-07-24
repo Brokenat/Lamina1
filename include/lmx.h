@@ -63,7 +63,7 @@ typedef LmModule LmModule;
 struct LaminaVM;
 typedef LaminaVM LaminaVM;
 
-LM_API LmModule* LM_CALL lmx_doString(LmState* state, const char* code);
+LM_API LmModule* LM_CALL lmx_doString(LmState* state, const char* code, const char* name);
 
 LM_API LmModule* LM_CALL lmx_doFile(LmState* state, const char* name);
 

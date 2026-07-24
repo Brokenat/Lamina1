@@ -29,7 +29,7 @@ struct Frame {
 };
 class LaminaVM {
     Value regs[LMX_VM_REG_COUNT];
-    ConstantPoolInfo* cp;
+    // ConstantPoolInfo* cp;
     Value* stack;
     Value* local_vars_bp;
     Value* local_vars_curp;
@@ -43,7 +43,7 @@ class LaminaVM {
 
 public:
     explicit LaminaVM() noexcept = delete;
-    explicit LaminaVM(ConstantPoolInfo* cp, int argc, char** argv) noexcept;
+    explicit LaminaVM(int argc, char** argv) noexcept;
     ~LaminaVM() noexcept;
     int run(CodeModule* prog) noexcept;
 

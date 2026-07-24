@@ -58,6 +58,7 @@ public:
     }
     static bool load_funcs(CodeModule* mod, std::vector<FuncObj>& result, const uint8_t*& p) noexcept {
         const auto over = p + *reinterpret_cast<const uint64_t*>(p) + sizeof(uint64_t);
+        p += sizeof(uint64_t);
         while (p != over) {
             const auto len = *reinterpret_cast<const uint32_t*>(p);
             p += sizeof(uint32_t);

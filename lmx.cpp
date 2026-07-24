@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "compiler/assembler.hpp"
 #include "compiler/error.hpp"
 #include "compiler/mir_builder.hpp"
 #include "compiler/mir_printer.hpp"
@@ -78,9 +79,33 @@ void lmx_printMIRFromString(LmState *state, FILE *file, const char *code, const 
 
 LaminaVM* lmx_newLaminaVM(LmState* state, int argc, char** argv) {
     auto* vm = static_cast<LaminaVM*>(malloc(sizeof(lmx::runtime::LaminaVM)));
-    new (vm) lmx::runtime::LaminaVM(nullptr, argc, argv);
+    new (vm) lmx::runtime::LaminaVM(argc, argv);
     lmx_state_addNode(state, vm);
     return vm;
+}
+
+LmModule *lmx_doString(LmState *state, const char *code, const char* name) {
+    std::string c = code;
+    auto tokens = lmx::Lexer(c).tokenize(c);
+    const auto node = lmx::Parser(tokens).parse_module(name);
+    if (errd) return nullptr;
+    lmx::hir::HirContext().check_module(node.get());
+    if (errd) return nullptr;
+
+    auto mir = lmx::mir::MirBuilder::from_ast_module(node);
+    if (errd) return nullptr;
+    const auto binary = lmx::Assembler().asm_module(&mir);
+    const auto new_m = malloc(binary.size() * sizeof(binary[0]));
+    memcpy(new_m, binary.data(), binary.size() * sizeof(binary[0]));
+    lmx_state_addNode(state, new_m);
+    return static_cast<LmModule*>(new_m);
+}
+
+int lmx_vmRunModule(LmState* state, LaminaVM* vm, LmModule* module) {
+    if (module == nullptr) return 1;
+    lmx::runtime::CodeModule mod(reinterpret_cast<uint8_t*>(module));
+    mod
+    return reinterpret_cast<lmx::runtime::LaminaVM*>(vm)->run(&mod);
 }
 
 void lmx_vmEval(LmState *state, LaminaVM *vm, LmValue *result, const char *code) {

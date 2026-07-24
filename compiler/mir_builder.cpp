@@ -86,7 +86,32 @@ class Builder {
         case BinaryNode::Op::Pow:
             if (is_float) return std::make_shared<MirFMulExpr>(std::move(lhs), std::move(rhs));
             return std::make_shared<MirIPowExpr>(std::move(lhs), std::move(rhs));
-        default: std::unreachable();
+        case BinaryNode::Op::Lt: {
+            return std::make_shared<MirICmpLtExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Gt: {
+            return std::make_shared<MirICmpGtExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Ge:{
+            return std::make_shared<MirICmpGeExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Le:{
+            return std::make_shared<MirICmpLeExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Eq:{
+            return std::make_shared<MirICmpEqExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Ne: {
+            return std::make_shared<MirICmpNeExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::And:{
+            return std::make_shared<MirCmpAndExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Or:{
+            return std::make_shared<MirCmpOrExpr>(std::move(lhs), std::move(rhs));
+        }
+        case BinaryNode::Op::Dot:
+            break;
         }
     }
 

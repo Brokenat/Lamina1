@@ -165,6 +165,14 @@ struct MirICmpGeExpr : MirOperateExpr {
     std::shared_ptr<MirExpr> lhs, rhs;
     explicit MirICmpGeExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
 };
+struct MirCmpAndExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirCmpAndExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
+struct MirCmpOrExpr : MirOperateExpr {
+    std::shared_ptr<MirExpr> lhs, rhs;
+    explicit MirCmpOrExpr(std::shared_ptr<MirExpr> lhs, std::shared_ptr<MirExpr> rhs) noexcept;
+};
 struct MirIfTrueExpr : MirOperateExpr {
     std::shared_ptr<MirExpr> cond;
     std::string label;

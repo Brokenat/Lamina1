@@ -3,13 +3,23 @@
 //
 
 #include "assembler.hpp"
-
 #include "lmx.h"
 
 #include <algorithm>
 #include <cstring>
+#include <ranges>
 
 namespace lmx {
+std::vector<uint8_t> RegAllocator::get_all_using() noexcept {
+    std::vector<uint8_t> rs;
+    rs.reserve(COMMON_REG_COUNT);
+    for (uint8_t i = 0; i < COMMON_REG_COUNT; i++) {
+        if (regs.test(i)) {
+            rs.push_back(i + 1);
+        }
+    }
+    return rs;
+}
 
 void InstEmitter::emit(InstSeq& s, const runtime::Opcode::Opcode op, const uint8_t a, const uint8_t b, const uint8_t c) noexcept {
     s.push_back({{static_cast<uint8_t>(op), a, b, c}});
@@ -58,6 +68,7 @@ bool InstEmitter::inst_is_ret_reg(const runtime::Opcode::Opcode op) noexcept {
     case runtime::Opcode::IfTrue:
     case runtime::Opcode::IfFalse:
     case runtime::Opcode::Call:
+    case runtime::Opcode::Push:
         return false;
     case runtime::Opcode::New:
     case runtime::Opcode::GetTrue:
@@ -90,7 +101,10 @@ bool InstEmitter::inst_is_ret_reg(const runtime::Opcode::Opcode op) noexcept {
     case runtime::Opcode::FNeg:
     case runtime::Opcode::MovRR:
     case runtime::Opcode::Pop:
+    case runtime::Opcode::And:
+    case runtime::Opcode::Or:
         return true;
+        break;
     }
     return false;
 }
@@ -248,7 +262,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
         case runtime::Opcode::ICmpGe:
         case runtime::Opcode::And:
         case runtime::Opcode::Or: {
-            auto& op = *reinterpret_cast<mir::MirIAddExpr*>(node);
+            const auto& op = *reinterpret_cast<mir::MirIAddExpr*>(node);
             const auto rl = asm_mir_expr(insts, op.lhs.get());
             const auto rr = asm_mir_expr(insts, op.rhs.get());
             const auto rd = *reg.alloc();
@@ -264,7 +278,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
         case runtime::Opcode::FMul:
         case runtime::Opcode::FDiv:
         case runtime::Opcode::FMod: {
-            auto& op = *reinterpret_cast<mir::MirFAddExpr*>(node);
+            const auto& op = *reinterpret_cast<mir::MirFAddExpr*>(node);
             const auto rl = asm_mir_expr(insts, op.lhs.get());
             const auto rr = asm_mir_expr(insts, op.rhs.get());
             const auto rd = *reg.alloc();
@@ -276,7 +290,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
 
         // --- Unary ops ---
         case runtime::Opcode::INeg: {
-            auto& op = *reinterpret_cast<mir::MirINegExpr*>(node);
+            const auto& op = *reinterpret_cast<mir::MirINegExpr*>(node);
             const auto r = asm_mir_expr(insts, op.e.get());
             const auto rd = *reg.alloc();
             InstEmitter::emit(insts, runtime::Opcode::INeg, rd, r);
@@ -284,7 +298,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
             return rd;
         }
         case runtime::Opcode::FNeg: {
-            auto& op = *reinterpret_cast<mir::MirFNegExpr*>(node);
+            const auto& op = *reinterpret_cast<mir::MirFNegExpr*>(node);
             const auto r = asm_mir_expr(insts, op.e.get());
             const auto rd = *reg.alloc();
             InstEmitter::emit(insts, runtime::Opcode::FNeg, rd, r);
@@ -294,7 +308,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
 
         // --- Ret with value ---
         case runtime::Opcode::Ret: {
-            auto& ret = *reinterpret_cast<mir::MirRetExpr*>(node);
+            const auto& ret = *reinterpret_cast<mir::MirRetExpr*>(node);
             const auto r = asm_mir_expr(insts, ret.value.get());
             InstEmitter::emit(insts, runtime::Opcode::MovRR, uint8_t{0}, r);
             reg.free(r);
@@ -304,7 +318,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
 
         // --- Goto ---
         case runtime::Opcode::Goto: {
-            auto& g = *reinterpret_cast<mir::MirGotoExpr*>(node);
+            const auto& g = *reinterpret_cast<mir::MirGotoExpr*>(node);
             const auto pos = insts.size() * 4;
             InstEmitter::emit(insts, runtime::Opcode::Goto, uint16_t{0}, uint8_t{0});
             pending_fixups.push_back({pos, runtime::Opcode::Goto, g.label});
@@ -313,7 +327,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
 
         // --- Conditional branches ---
         case runtime::Opcode::IfTrue: {
-            auto& i = *reinterpret_cast<mir::MirIfTrueExpr*>(node);
+            const auto& i = *reinterpret_cast<mir::MirIfTrueExpr*>(node);
             const auto r = asm_mir_expr(insts, i.cond.get());
             const auto pos = insts.size() * 4;
             InstEmitter::emit(insts, runtime::Opcode::IfTrue, r, uint16_t{0});
@@ -322,20 +336,21 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
             return 0;
         }
         case runtime::Opcode::IfFalse: {
-            auto& i = *reinterpret_cast<mir::MirIfFalseExpr*>(node);
+            const auto& i = *reinterpret_cast<mir::MirIfFalseExpr*>(node);
             const auto r = asm_mir_expr(insts, i.cond.get());
             const auto pos = insts.size() * 4;
             InstEmitter::emit(insts, runtime::Opcode::IfFalse, r, uint16_t{0});
             reg.free(r);
-            pending_fixups.push_back({pos, runtime::Opcode::IfFalse, i.label});
+            pending_fixups.emplace_back(pos, runtime::Opcode::IfFalse, i.label);
             return 0;
         }
 
         // --- CallFast ---
         case runtime::Opcode::CallFast: {
-            auto& c = *reinterpret_cast<mir::MirCallFastExpr*>(node);
-            const uint8_t argc = static_cast<uint8_t>(c.args.size());
+            const auto& c = *reinterpret_cast<mir::MirCallFastExpr*>(node);
 
+
+            const auto argc = static_cast<uint8_t>(c.args.size());
             // Evaluate each arg and place in regs[255 - i]
             for (size_t i = 0; i < c.args.size(); ++i) {
                 const auto rr = asm_mir_expr(insts, c.args[i].get());
@@ -345,6 +360,10 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
                 }
                 reg.free(rr);
             }
+            auto using_regs = reg.get_all_using();
+            for (const auto r : using_regs) {
+                InstEmitter::emit(insts, runtime::Opcode::Push, r);
+            }
 
             const auto func_it = funcs.find(c.name);
             if (func_it == funcs.end()) return 0;
@@ -352,6 +371,9 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
 
             const auto rd = *reg.alloc();
             InstEmitter::emit(insts, runtime::Opcode::CallFast, func_idx, argc);
+            for (const auto r : using_regs | std::views::reverse) {
+                InstEmitter::emit(insts, runtime::Opcode::Pop, r);
+            }
             // CallFast result is left in regs[0] by convention
             InstEmitter::emit(insts, runtime::Opcode::MovRR, rd, uint8_t{0}); // return from r0
             return rd;
@@ -365,7 +387,7 @@ uint8_t Assembler::asm_mir_expr(InstEmitter::InstSeq& insts, mir::MirExpr* node)
 
         // --- New ---
         case runtime::Opcode::New: {
-            auto& n = *reinterpret_cast<mir::MirNewExpr*>(node);
+            const auto& n = *reinterpret_cast<mir::MirNewExpr*>(node);
             const auto r = asm_mir_expr(insts, n.expr.get());
             const auto rd = *reg.alloc();
             // Use constant pool index from the evaluated expression
@@ -406,7 +428,7 @@ void Assembler::asm_mir_node(InstEmitter::InstSeq& result, mir::MirNode* node) n
         const auto n = reinterpret_cast<mir::MirAssign*>(node);
         const auto r = asm_mir_expr(result, n->expr.get());
 
-        auto v_opt = find_var(n->name);
+        const auto v_opt = find_var(n->name);
         if (!v_opt) {
             // New variable – allocate a local var slot
             const auto var_idx = next_local_var++;
@@ -473,7 +495,7 @@ std::vector<uint8_t> Assembler::asm_func(mir::MirFuncDefine* def) noexcept {
     // Flatten instructions into raw bytecode
     std::vector<uint8_t> code;
     code.reserve(insts.size() * 4);
-    for (auto& w : insts) {
+    for (const auto& w : insts) {
         code.push_back(w.bytes[0]);
         code.push_back(w.bytes[1]);
         code.push_back(w.bytes[2]);
@@ -491,25 +513,25 @@ std::vector<uint8_t> Assembler::asm_func(mir::MirFuncDefine* def) noexcept {
 // ============================================================
 
 void Assembler::resolve_fixups(std::vector<uint8_t>& code) noexcept {
-    for (auto& f : pending_fixups) {
-        const auto it = label_positions.find(f.label);
+    for (auto&[inst_pos, op, label] : pending_fixups) {
+        const auto it = label_positions.find(label);
         if (it == label_positions.end()) continue;
 
         const auto target = static_cast<int64_t>(it->second);
-        const auto origin = static_cast<int64_t>(f.inst_pos);
+        const auto origin = static_cast<int64_t>(inst_pos);
         const auto offset = static_cast<int16_t>(target - origin);
 
-        switch (f.op) {
+        switch (op) {
         case runtime::Opcode::Goto:
             // offset at bytes 1-2
-            code[f.inst_pos + 1] = static_cast<uint8_t>(offset & 0xFF);
-            code[f.inst_pos + 2] = static_cast<uint8_t>((offset >> 8) & 0xFF);
+            code[inst_pos + 1] = static_cast<uint8_t>(offset & 0xFF);
+            code[inst_pos + 2] = static_cast<uint8_t>((offset >> 8) & 0xFF);
             break;
         case runtime::Opcode::IfTrue:
         case runtime::Opcode::IfFalse:
             // offset at bytes 2-3 (byte 1 is the register)
-            code[f.inst_pos + 2] = static_cast<uint8_t>(offset & 0xFF);
-            code[f.inst_pos + 3] = static_cast<uint8_t>((offset >> 8) & 0xFF);
+            code[inst_pos + 2] = static_cast<uint8_t>(offset & 0xFF);
+            code[inst_pos + 3] = static_cast<uint8_t>((offset >> 8) & 0xFF);
             break;
         default:
             break;
@@ -592,19 +614,8 @@ std::vector<uint8_t> Assembler::asm_module(mir::MirModule* mod) noexcept {
         }
     }
 
-    // ---- Write function section ----
-    // Size of function data (8 bytes) followed by entries
+    // ---- Write function section (user functions only) ----
     std::vector<uint8_t> func_section;
-
-    // Write entry point as func index 0
-    {
-        const auto entry_len = static_cast<uint32_t>(entry_code.size());
-        func_section.push_back(static_cast<uint8_t>(entry_len & 0xFF));
-        func_section.push_back(static_cast<uint8_t>((entry_len >> 8) & 0xFF));
-        func_section.push_back(static_cast<uint8_t>((entry_len >> 16) & 0xFF));
-        func_section.push_back(static_cast<uint8_t>((entry_len >> 24) & 0xFF));
-        func_section.insert(func_section.end(), entry_code.begin(), entry_code.end());
-    }
 
     for (auto& cf : compiled_funcs) {
         const auto func_len = static_cast<uint32_t>(cf.code.size());
@@ -615,12 +626,15 @@ std::vector<uint8_t> Assembler::asm_module(mir::MirModule* mod) noexcept {
         func_section.insert(func_section.end(), cf.code.begin(), cf.code.end());
     }
 
-    // Write func section size + data
     write_u64(result, func_section.size());
     result.insert(result.end(), func_section.begin(), func_section.end());
 
     // ---- Write constant pool section (empty for now) ----
     write_u64(result, 0);
+
+    // ---- Write entry code section (after constants, loaded as prog->code) ----
+    write_u64(result, entry_code.size());
+    result.insert(result.end(), entry_code.begin(), entry_code.end());
 
     return result;
 }

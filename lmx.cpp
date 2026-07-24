@@ -104,7 +104,6 @@ LmModule *lmx_doString(LmState *state, const char *code, const char* name) {
 int lmx_vmRunModule(LmState* state, LaminaVM* vm, LmModule* module) {
     if (module == nullptr) return 1;
     lmx::runtime::CodeModule mod(reinterpret_cast<uint8_t*>(module));
-    mod
     return reinterpret_cast<lmx::runtime::LaminaVM*>(vm)->run(&mod);
 }
 

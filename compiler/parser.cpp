@@ -397,8 +397,10 @@ std::shared_ptr<StmtNode> Parser::parse_func() noexcept {
     }
     consume(TokenType::RPAREN, ")");
     std::shared_ptr<Type> return_type;
-    if (match(TokenType::ARROW))
+    if (match(TokenType::ARROW)) {
+        advance();
         return_type = parse_type();
+    }
     else return_type = std::make_shared<UnknownType>();
     auto body = std::static_pointer_cast<BlockExprNode>(parse_block());
     frame_count--;

@@ -18,6 +18,7 @@ enum Opcode : uint8_t {
     IConst,     // reg(1) imm(2)
     CConst,     // reg(1) constant_tag_idx(2)
     Pop,        // reg(1)
+    Push,       // reg(1)
     Halt,
     IAdd, ISub, IMul, IDiv, IMod, IPow, INeg,    // reg(1) reg(1) reg(1)
 

@@ -13,8 +13,8 @@ namespace lmx::runtime {
 LaminaVM::LaminaVM(const int argc, char **argv) noexcept :
     // cp(cp),
     stack(new Value[LMX_VM_REG_COUNT * LMX_CALLSTACK_MAX_COUNT]),
-    local_vars_bp(new Value[LMX_LOCAL_VAR_COUNT * LMX_CALLSTACK_MAX_COUNT]),
-    local_vars_curp(local_vars_bp),
+    //local_vars_bp(new Value[LMX_LOCAL_VAR_COUNT * LMX_CALLSTACK_MAX_COUNT]),
+    //local_vars_curp(local_vars_bp),
     global_vars(new Value[65536]),
     // cur_frame(new Frame(nullptr, nullptr, local_vars_curp)),
     args(argv, argc) {}
@@ -22,13 +22,19 @@ LaminaVM::LaminaVM(const int argc, char **argv) noexcept :
 LaminaVM::~LaminaVM() noexcept {
     delete[] stack;
     delete[] global_vars;
-    delete[] local_vars_bp;
+    //delete[] local_vars_bp;
     for (const auto frames : free_frames) delete frames;
     delete cur_frame;
 }
 
-Frame::Frame(Frame* last, CodeModule* mod ,const uint8_t *ret_addr, Value* local_vars) noexcept
-    : last(last), mod(mod), ret_addr(ret_addr), local_vars(local_vars) {}
+Value &LaminaVM::get_reg(const uint8_t reg) noexcept {
+    return regs[reg];
+}
+
+Frame::Frame(Frame* last, CodeModule* mod ,const uint8_t *ret_addr) noexcept
+    : last(last), mod(mod), ret_addr(ret_addr)
+//, local_vars(local_vars)
+{}
 
 Frame::~Frame() noexcept = default;
 
@@ -37,7 +43,7 @@ Frame::~Frame() noexcept = default;
 static const void* dispatch[] = {\
     &&opNop, &&opNew,\
     &&opGetTrue, &&opGetFalse, &&opGetNull,\
-    &&opIConst, &&opCConst, &&opPop, &&opHalt,\
+    &&opIConst, &&opCConst, &&opPop, &&opPush, &&opHalt,\
     &&opIAdd, &&opISub, &&opIMul, &&opIDiv, &&opIMod, &&opIPow, &&opINeg,\
     &&opFuncCreate,\
     &&opCallVirtual, &&opCCall, &&opCallFast, &&opRet,\
@@ -69,10 +75,10 @@ LMX_INLINE static constexpr uint16_t read_u16(const uint8_t* p) {
     return static_cast<uint16_t>(p[0] | (p[1] << 8));
 };
 int LaminaVM::run(CodeModule *prog) noexcept {
-    cur_frame = new Frame(nullptr, prog, nullptr, local_vars_curp);
+    cur_frame = new Frame(nullptr, prog, nullptr);
     const uint8_t* ip = prog->code;
-    std::cout << "ok" << std::endl;
 
+    std::cout << prog->disassemble() << std::endl;
 
     VM_DISPATCH
 
@@ -141,6 +147,11 @@ int LaminaVM::run(CodeModule *prog) noexcept {
         VM_NEXT
     }
 
+    VM_LABEL(Push) {
+        *stack++ = regs[ip[1]];
+        VM_NEXT
+    }
+
     VM_LABEL(Halt) {
         return 0;
     }
@@ -199,7 +210,7 @@ int LaminaVM::run(CodeModule *prog) noexcept {
     VM_LABEL(CallFast) {
         const auto* func = &cur_frame->mod->funcs[read_u16(ip + 1)];
         new_frame(this, func->mod, ip + 4);
-        auto i = ip[3];
+        auto i = ip[3] - 1;
         while (i != 0) {
             cur_frame->local_vars[i] = regs[LMX_VM_REG_COUNT - 1 - i];
             i--;

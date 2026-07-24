@@ -1,27 +1,31 @@
 //
 // Created by meian on 2026/4/8.
 //
+#include <iostream>
+#include <ostream>
 #include <string>
 
+#include "runtime/vm.hpp"
 #include "lmx.h"
 
 int main(int argc, char** argv) {
     const std::string code = R"(
-
-let v = add(1, 2)
-
-func add(a int, b int) {
-    if {
-        var c = 5
-
-        a + b * 2 + c
-    } > 10 {24} else {12}
+func fib(n int) -> int {
+    if (n <= 1) {n}
+    else { fib(n - 1) + fib(n - 2) }
 }
+let v = fib(10)
+
 )";
     auto state = lmx_newState();
-    // lmx_printMIRFromString(&state, stdout, code.c_str(), "test");
-    const auto vm = lmx_newLaminaVM(&state, argc, argv);
+
     const auto module = lmx_doString(&state, code.c_str(), "test");
+
+    const auto vm = lmx_newLaminaVM(&state, argc, argv);
+
     auto result = lmx_vmRunModule(&state, vm, module);
+
+    std::cout << reinterpret_cast<lmx::runtime::LaminaVM*>(vm)->get_reg(1).int_val << std::endl;
+
     lmx_deleteState(&state);
 }

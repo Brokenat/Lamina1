@@ -39,6 +39,7 @@ class RegAllocator {
 public:
     std::optional<uint8_t> alloc() noexcept;
     void free(uint8_t reg) noexcept;
+    std::vector<uint8_t> get_all_using() noexcept;
 };
 
 struct PendingFixup {

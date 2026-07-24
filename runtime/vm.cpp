@@ -3,6 +3,9 @@
 //
 
 #include "vm.hpp"
+
+#include <chrono>
+
 #include "object/fraction.hpp"
 #include <cmath>
 #include <iostream>
@@ -78,8 +81,9 @@ int LaminaVM::run(CodeModule *prog) noexcept {
     cur_frame = new Frame(nullptr, prog, nullptr);
     const uint8_t* ip = prog->code;
 
-    std::cout << prog->disassemble() << std::endl;
+    // std::cout << prog->disassemble() << std::endl;
 
+    // const auto start = std::chrono::high_resolution_clock::now();
     VM_DISPATCH
 
     VM_LABEL(Nop) {
@@ -153,6 +157,8 @@ int LaminaVM::run(CodeModule *prog) noexcept {
     }
 
     VM_LABEL(Halt) {
+        // const auto end = std::chrono::high_resolution_clock::now();
+        // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start) << std::endl;
         return 0;
     }
 

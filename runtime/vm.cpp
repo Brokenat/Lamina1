@@ -4,6 +4,7 @@
 
 #include "vm.hpp"
 
+#include <cassert>
 #include <chrono>
 
 #include "object/fraction.hpp"
@@ -86,6 +87,7 @@ int LaminaVM::run(CodeModule *prog) noexcept {
     // const auto start = std::chrono::high_resolution_clock::now();
     VM_DISPATCH
 
+    // assert((uint64_t)ip % 4 == 0);
     VM_LABEL(Nop) {
         VM_NEXT
     }
